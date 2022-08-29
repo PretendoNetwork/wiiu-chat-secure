@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	nex "github.com/PretendoNetwork/nex-go"
+
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
 )
 

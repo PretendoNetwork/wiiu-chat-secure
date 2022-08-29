@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	nex "github.com/PretendoNetwork/nex-go"
+
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
 )
 
@@ -9,8 +12,8 @@ import (
 type NotificationEvent struct {
 	sourcePID       uint32
 	typeParameter   uint32
-	parameter1      uint64
-	parameter2      uint64
+	parameter1      uint32
+	parameter2      uint32
 	stringParameter string
 	nex.Structure
 }
@@ -19,8 +22,8 @@ type NotificationEvent struct {
 func (notificationEvent *NotificationEvent) Bytes(stream *nex.StreamOut) []byte {
 	stream.WriteUInt32LE(notificationEvent.sourcePID)
 	stream.WriteUInt32LE(notificationEvent.typeParameter)
-	stream.WriteUInt64LE(notificationEvent.parameter1)
-	stream.WriteUInt64LE(notificationEvent.parameter2)
+	stream.WriteUInt32LE(notificationEvent.parameter1)
+	stream.WriteUInt32LE(notificationEvent.parameter2)
 	stream.WriteString(notificationEvent.stringParameter)
 
 	return stream.Bytes()
@@ -28,28 +31,21 @@ func (notificationEvent *NotificationEvent) Bytes(stream *nex.StreamOut) []byte 
 
 func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
 
+	fmt.Printf("uiType: %d\r\n", uiType)
+
 	rmcResponseStream := nex.NewStreamOut(nexServer)
 
 	// List<NotificationEvent>
 	notificationEvent := &NotificationEvent{}
 
-	notificationEvent.sourcePID = 1743126339                  // Sender PID
+	notificationEvent.sourcePID = 1337825003                  // Sender PID
 	notificationEvent.typeParameter = 102000                  // Notification type
 	notificationEvent.parameter1 = 1                          // Gathering ID
-	notificationEvent.parameter2 = 1730592963                 // Recipient PID
+	notificationEvent.parameter2 = 1513547864                 // Recipient PID
 	notificationEvent.stringParameter = "Invite Cancellation" // Unknown
 
-	notificationEvent2 := &NotificationEvent{}
-
-	notificationEvent2.sourcePID = 1743126339             // Sender PID
-	notificationEvent2.typeParameter = 101000             // Notification type
-	notificationEvent2.parameter1 = 1                     // Gathering ID
-	notificationEvent2.parameter2 = 1730592963            // Recipient PID
-	notificationEvent2.stringParameter = "Invite Request" // Unknown
-
-	rmcResponseStream.WriteUInt32LE(2)
-	rmcResponseStream.WriteStructure(notificationEvent)
-	rmcResponseStream.WriteStructure(notificationEvent2)
+	rmcResponseStream.WriteUInt32LE(0)
+	//rmcResponseStream.WriteStructure(notificationEvent)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
@@ -70,4 +66,11 @@ func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiT
 	responsePacket.AddFlag(nex.FlagReliable)
 
 	nexServer.Send(responsePacket)
+
+	//// HANDLE INCOMING CALL ////
+
+	caller, target, ringing := getCallInfoByTarget(client.PID())
+	if (caller != 0) && (target == client.PID()) && (ringing == true) {
+		sendCallNotification(caller, target, callID)
+	}
 }

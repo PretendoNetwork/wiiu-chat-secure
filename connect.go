@@ -19,7 +19,8 @@ func connect(packet *nex.PacketV1) {
 	checkDataDecrypted := kerberos.Decrypt(checkData)
 	checkDataStream := nex.NewStreamIn(checkDataDecrypted, nexServer)
 
-	_ = checkDataStream.ReadUInt32LE() // User PID
+	userPID := checkDataStream.ReadUInt32LE() // User PID
+	packet.Sender().SetPID(userPID)
 	_ = checkDataStream.ReadUInt32LE() //CID of secure server station url
 	responseCheck := checkDataStream.ReadUInt32LE()
 
@@ -33,4 +34,12 @@ func connect(packet *nex.PacketV1) {
 
 	packet.Sender().UpdateRC4Key(sessionKey)
 	packet.Sender().SetSessionKey(sessionKey)
+
+	if !doesUserExist(userPID) {
+		addNewUser(userPID)
+	}
+	if !isUserAllowed(userPID) {
+		nexServer.Kick(packet.Sender())
+		return
+	}
 }
