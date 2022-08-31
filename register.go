@@ -11,8 +11,8 @@ func register(err error, client *nex.Client, callID uint32, stationUrls []*nex.S
 	address := client.Address().IP.String()
 	port := string(client.Address().Port)
 
-	localStation.SetAddress(&address)
-	localStation.SetPort(&port)
+	localStation.SetAddress(address)
+	localStation.SetPort(port)
 
 	localStationURL := localStation.EncodeToString()
 
