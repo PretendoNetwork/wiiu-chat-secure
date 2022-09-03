@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,7 +24,7 @@ var callsCollection *mongo.Collection
 var tourneysCollection *mongo.Collection
 
 func connectMongo() {
-	mongoClient, _ = mongo.NewClient(options.Client().ApplyURI("mongodb://143.198.126.113:27017/"))
+	mongoClient, _ = mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	mongoContext, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	_ = mongoClient.Connect(mongoContext)
 
