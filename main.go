@@ -6,12 +6,11 @@ import (
 
 	nex "github.com/PretendoNetwork/nex-go"
 
+	secureconnection "github.com/PretendoNetwork/nex-protocols-common-go/secure-connection"
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
 )
 
 var nexServer *nex.Server
-
-var secureServer *nexproto.SecureProtocol
 
 func main() {
 	nexServer = nex.NewServer()
@@ -40,7 +39,7 @@ func main() {
 		deletePlayerSession(packet.Sender().PID())
 	})
 
-	secureServer = nexproto.NewSecureProtocol(nexServer)
+	secureServer := secureconnection.NewCommonSecureConnectionProtocol(nexServer)
 	matchmakeExtensionServer := nexproto.NewMatchmakeExtensionProtocol(nexServer)
 	natTraversalServer := nexproto.NewNatTraversalProtocol(nexServer)
 	matchMakingServer := nexproto.NewMatchMakingProtocol(nexServer)
@@ -60,11 +59,13 @@ func main() {
 	matchMakingServer.GetSessionURLs(getSessionUrls)
 
 	// Handle PRUDP CONNECT packet (not an RMC method)
-	nexServer.On("Connect", connect)
+	//nexServer.On("Connect", connect)
 
 	// Secure protocol handles
 
-	secureServer.Register(register)
+	secureServer.AddConnection(addPlayerSession)
+	secureServer.UpdateConnection(updatePlayerSessionAll)
+	secureServer.DoesConnectionExist(doesSessionExist)
 
 	nexServer.Listen(":60005")
 }
