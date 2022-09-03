@@ -1,20 +1,25 @@
 package main
 
-import nex "github.com/PretendoNetwork/nex-go"
+import (
+	"strconv"
+
+	nex "github.com/PretendoNetwork/nex-go"
+	nexproto "github.com/PretendoNetwork/nex-protocols-go"
+)
 
 func sendCallNotification(caller uint32, target uint32, callID uint32) {
-	event := &NotificationEvent{}
+	event := nexproto.NewNotificationEvent()
 
-	event.sourcePID = caller                 // Sender PID
-	event.typeParameter = 101000             // Notification type
-	event.parameter1 = caller                // Gathering ID
-	event.parameter2 = target                // Recipient PID
-	event.stringParameter = "Invite Request" // Unknown
+	event.PIDSource = caller          // Sender PID
+	event.Type = 101000               // Notification type
+	event.Param1 = caller             // Gathering ID
+	event.Param2 = target             // Recipient PID
+	event.StrParam = "Invite Request" // Unknown
 
 	eventObject := nex.NewStreamOut(nexServer)
 	eventObject.WriteStructure(event)
 
-	rmcRequest, _ := nex.NewRMCRequest([]byte{})
+	rmcRequest := nex.NewRMCRequest()
 	rmcRequest.SetProtocolID(14)
 	rmcRequest.SetCallID(0xffff + callID)
 	rmcRequest.SetMethodID(1)
@@ -23,8 +28,11 @@ func sendCallNotification(caller uint32, target uint32, callID uint32) {
 	rmcRequestBytes := rmcRequest.Bytes()
 
 	clientAddr := getPlayerSessionAddress(target)
+	targetUrl := nex.NewStationURL(clientAddr)
+	targetPID, _ := strconv.Atoi(targetUrl.PID())
+	targetClient := nexServer.FindClientFromPID(uint32(targetPID))
 
-	requestPacket, _ := nex.NewPacketV1(nexServer.GetClient(clientAddr), nil)
+	requestPacket, _ := nex.NewPacketV1(targetClient, nil)
 
 	requestPacket.SetVersion(1)
 	requestPacket.SetSource(0xA1)
