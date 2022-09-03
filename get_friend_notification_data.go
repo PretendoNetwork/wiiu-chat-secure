@@ -35,17 +35,26 @@ func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiT
 
 	rmcResponseStream := nex.NewStreamOut(nexServer)
 
-	// List<NotificationEvent>
-	notificationEvent := &NotificationEvent{}
+	/*
+		// List<NotificationEvent>
 
-	notificationEvent.sourcePID = 1337825003                  // Sender PID
-	notificationEvent.typeParameter = 102000                  // Notification type
-	notificationEvent.parameter1 = 1                          // Gathering ID
-	notificationEvent.parameter2 = 1513547864                 // Recipient PID
-	notificationEvent.stringParameter = "Invite Cancellation" // Unknown
+		// This enableds auto-match making for calls
+		var caller uint32 = 1743126339
+		var target uint32 = 1424784406
 
-	rmcResponseStream.WriteUInt32LE(0)
-	//rmcResponseStream.WriteStructure(notificationEvent)
+		event := nexproto.NewNotificationEvent()
+
+		event.PIDSource = caller          // Sender PID
+		event.Type = 101000               // Notification type
+		event.Param1 = caller             // Gathering ID
+		event.Param2 = target             // Recipient PID
+		event.StrParam = "Invite Request" // Unknown
+
+		rmcResponseStream.WriteUInt32LE(1)
+		rmcResponseStream.WriteStructure(event)
+	*/
+
+	rmcResponseStream.WriteUInt32LE(0) // No data for now
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
