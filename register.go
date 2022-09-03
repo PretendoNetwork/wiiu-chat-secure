@@ -17,11 +17,6 @@ func register(err error, client *nex.Client, callID uint32, stationUrls []*nex.S
 
 	address := client.Address().IP.String()
 	port := strconv.Itoa(client.Address().Port)
-<<<<<<< HEAD
-
-	localStation.SetAddress(address)
-	localStation.SetPort(port)
-=======
 	natf := "0"
 	natm := "0"
 	type_ := "3"
@@ -33,7 +28,6 @@ func register(err error, client *nex.Client, callID uint32, stationUrls []*nex.S
 	localStation.SetNatm(&natm)
 	localStation.SetType(&type_)
 	localStation.SetPid(&pid)
->>>>>>> 25dcb37f47cc6f3d3a49978776c564b8484df470
 
 	globalStationURL := localStation.EncodeToString()
 
@@ -46,7 +40,7 @@ func register(err error, client *nex.Client, callID uint32, stationUrls []*nex.S
 	rmcResponseStream := nex.NewStreamOut(nexServer)
 
 	rmcResponseStream.WriteUInt32LE(0x10001) // Success
-	rmcResponseStream.WriteUInt32LE(uint32(nexServer.ConnectionIDCounter().Increment()))
+	rmcResponseStream.WriteUInt32LE(uint32(secureServer.ConnectionIDCounter.Increment()))
 	rmcResponseStream.WriteString(localStationURL)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
