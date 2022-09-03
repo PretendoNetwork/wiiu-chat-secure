@@ -52,16 +52,11 @@ func main() {
 
 	natTraversalServer.ReportNATProperties(reportNATProperties)
 	natTraversalServer.RequestProbeInitiationExt(requestProbeInitiationExt)
-	natTraversalServer.ReportNATTraversalResult(reportNatTraversalResult)
+	natTraversalServer.ReportNATTraversalResult(reportNATTraversalResult)
 
 	matchMakingServer.UnregisterGathering(unregisterGathering)
 	matchMakingServer.FindBySingleID(findBySingleID)
 	matchMakingServer.GetSessionURLs(getSessionUrls)
-
-	// Handle PRUDP CONNECT packet (not an RMC method)
-	//nexServer.On("Connect", connect)
-
-	// Secure protocol handles
 
 	secureServer.AddConnection(addPlayerSession)
 	secureServer.UpdateConnection(updatePlayerSessionAll)
