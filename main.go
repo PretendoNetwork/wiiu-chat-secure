@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	nex "github.com/PretendoNetwork/nex-go"
 
@@ -17,6 +18,7 @@ func main() {
 	nexServer.SetPrudpVersion(1)
 	nexServer.SetNexVersion(2)
 	nexServer.SetKerberosKeySize(32)
+	nexServer.SetKerberosPassword(os.Getenv("KERBEROS_PASSWORD"))
 	nexServer.SetAccessKey("e7a47214")
 
 	nexServer.On("Data", func(packet *nex.PacketV1) {
