@@ -58,7 +58,7 @@ func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiT
 	//// HANDLE INCOMING CALL ////
 
 	caller, target, ringing := getCallInfoByTarget(client.PID())
-	if (caller != 0) && (target == client.PID()) && (ringing == true) {
+	if (caller != 0) && (target == client.PID()) && ringing {
 		sendCallNotification(caller, target, callID)
 	}
 }
