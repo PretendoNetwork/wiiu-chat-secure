@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 
+	nex "github.com/PretendoNetwork/nex-go"
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
-
-	"github.com/PretendoNetwork/nex-go"
 )
 
 func joinMatchmakeSessionEx(err error, client *nex.Client, callID uint32, gid uint32, strMessage string, dontCareMyBlockList bool, participationCount uint16) {
