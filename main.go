@@ -41,7 +41,7 @@ func main() {
 
 	secureServer := secureconnection.NewCommonSecureConnectionProtocol(nexServer)
 	matchmakeExtensionServer := nexproto.NewMatchmakeExtensionProtocol(nexServer)
-	natTraversalServer := nexproto.NewNatTraversalProtocol(nexServer)
+	natTraversalServer := nexproto.NewNATTraversalProtocol(nexServer)
 	matchMakingServer := nexproto.NewMatchMakingProtocol(nexServer)
 
 	matchmakeExtensionServer.OpenParticipation(openParticipation)
