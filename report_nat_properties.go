@@ -13,23 +13,23 @@ func reportNATProperties(err error, client *nex.Client, callID uint32, natm uint
 	stationUrlsStrings := getPlayerUrls(client.PID())
 	stationUrls := make([]nex.StationURL, len(stationUrlsStrings))
 	pid := strconv.FormatUint(uint64(client.PID()), 10)
-	rvcid := strconv.FormatUint(uint64(client.ConnectionId()), 10)
+	rvcid := strconv.FormatUint(uint64(client.ConnectionID()), 10)
 
 	for i := 0; i < len(stationUrlsStrings); i++ {
 		stationUrls[i] = *nex.NewStationURL(stationUrlsStrings[i])
 		if stationUrls[i].Type() == "3" {
 			natm_s := strconv.FormatUint(uint64(natm), 10)
 			natf_s := strconv.FormatUint(uint64(natf), 10)
-			stationUrls[i].SetNatm(&natm_s)
-			stationUrls[i].SetNatf(&natf_s)
+			stationUrls[i].SetNatm(natm_s)
+			stationUrls[i].SetNatf(natf_s)
 		}
-		stationUrls[i].SetPid(&pid)
-		stationUrls[i].SetRVCID(&rvcid)
+		stationUrls[i].SetPID(pid)
+		stationUrls[i].SetRVCID(rvcid)
 		updatePlayerSessionUrl(client.PID(), stationUrlsStrings[i], stationUrls[i].EncodeToString())
 	}
 
-	rmcResponse := nex.NewRMCResponse(nexproto.NatTraversalProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.NatTraversalMethodReportNATProperties, nil)
+	rmcResponse := nex.NewRMCResponse(nexproto.NATTraversalProtocolID, callID)
+	rmcResponse.SetSuccess(nexproto.NATTraversalMethodReportNATProperties, nil)
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
@@ -51,8 +51,8 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 	fmt.Println(targetList)
 	fmt.Println(stationToProbe)
 
-	rmcResponse := nex.NewRMCResponse(nexproto.NatTraversalProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.NatTraversalMethodRequestProbeInitiationExt, nil)
+	rmcResponse := nex.NewRMCResponse(nexproto.NATTraversalProtocolID, callID)
+	rmcResponse.SetSuccess(nexproto.NATTraversalMethodRequestProbeInitiationExt, nil)
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
@@ -70,9 +70,9 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 	nexServer.Send(responsePacket)
 
 	rmcMessage := nex.RMCRequest{}
-	rmcMessage.SetProtocolID(nexproto.NatTraversalProtocolID)
+	rmcMessage.SetProtocolID(nexproto.NATTraversalProtocolID)
 	rmcMessage.SetCallID(0xffff0000 + callID)
-	rmcMessage.SetMethodID(nexproto.NatTraversalMethodInitiateProbe)
+	rmcMessage.SetMethodID(nexproto.NATTraversalMethodInitiateProbe)
 	rmcRequestStream := nex.NewStreamOut(nexServer)
 	rmcRequestStream.WriteString(stationToProbe)
 	rmcRequestBody := rmcRequestStream.Bytes()
@@ -81,7 +81,8 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 
 	for _, target := range targetList {
 		targetUrl := nex.NewStationURL(target)
-		targetClient := nexServer.GetClient(targetUrl.Address() + ":" + targetUrl.Port())
+		targetPID, _ := strconv.Atoi(targetUrl.PID())
+		targetClient := nexServer.FindClientFromPID(uint32(targetPID))
 		fmt.Println(targetClient)
 		if targetClient != nil {
 			messagePacket, _ := nex.NewPacketV1(targetClient, nil)
@@ -99,12 +100,12 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 	}
 }
 
-func reportNatTraversalResult(err error, client *nex.Client, callID uint32, cid uint32, result bool, rtt uint32) {
+func reportNATTraversalResult(err error, client *nex.Client, callID uint32, cid uint32, result bool, rtt uint32) {
 	fmt.Println("DID NAT TRAVERSAL SUCCEED?")
 	fmt.Println(result)
 
-	rmcResponse := nex.NewRMCResponse(nexproto.NatTraversalProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.NatTraversalMethodReportNATTraversalResult, nil)
+	rmcResponse := nex.NewRMCResponse(nexproto.NATTraversalProtocolID, callID)
+	rmcResponse.SetSuccess(nexproto.NATTraversalMethodReportNATTraversalResult, nil)
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
