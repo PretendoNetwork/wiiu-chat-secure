@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	nex "github.com/PretendoNetwork/nex-go"
+
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
 )
 
@@ -27,16 +28,34 @@ func main() {
 		fmt.Println("======================")
 	})
 
+	nexServer.On("Kick", func(packet *nex.PacketV1) {
+		fmt.Println("Kick client event called")
+		deletePlayerSession(packet.Sender().PID())
+	})
+
+	nexServer.On("Disconnect", func(packet *nex.PacketV1) {
+		fmt.Println("Disconnect client event called")
+		deletePlayerSession(packet.Sender().PID())
+	})
+
 	secureServer = nexproto.NewSecureProtocol(nexServer)
 	matchmakeExtensionServer := nexproto.NewMatchmakeExtensionProtocol(nexServer)
-	natTraversalServer := nexproto.NewNATTraversalProtocol(nexServer)
+	natTraversalServer := nexproto.NewNatTraversalProtocol(nexServer)
+	matchMakingServer := nexproto.NewMatchMakingProtocol(nexServer)
 
 	matchmakeExtensionServer.OpenParticipation(openParticipation)
 	matchmakeExtensionServer.CreateMatchmakeSession(createMatchmakeSession)
 	matchmakeExtensionServer.UpdateNotificationData(updateNotificationData)
 	matchmakeExtensionServer.GetFriendNotificationData(getFriendNotificationData)
+	matchmakeExtensionServer.JoinMatchmakeSessionEx(joinMatchmakeSessionEx)
 
 	natTraversalServer.ReportNATProperties(reportNATProperties)
+	natTraversalServer.RequestProbeInitiationExt(requestProbeInitiationExt)
+	natTraversalServer.ReportNATTraversalResult(reportNatTraversalResult)
+
+	matchMakingServer.UnregisterGathering(unregisterGathering)
+	matchMakingServer.FindBySingleID(findBySingleID)
+	matchMakingServer.GetSessionURLs(getSessionUrls)
 
 	// Handle PRUDP CONNECT packet (not an RMC method)
 	nexServer.On("Connect", connect)

@@ -4,19 +4,44 @@ import (
 	"strconv"
 
 	nex "github.com/PretendoNetwork/nex-go"
+
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
 )
 
 func register(err error, client *nex.Client, callID uint32, stationUrls []*nex.StationURL) {
 	localStation := stationUrls[0]
+	localStationURL := localStation.EncodeToString()
+	connectionId := uint32(secureServer.ConnectionIDCounter.Increment())
+	client.SetConnectionId(connectionId)
+	client.SetLocalStationUrl(localStationURL)
 
 	address := client.Address().IP.String()
 	port := strconv.Itoa(client.Address().Port)
+<<<<<<< HEAD
 
 	localStation.SetAddress(address)
 	localStation.SetPort(port)
+=======
+	natf := "0"
+	natm := "0"
+	type_ := "3"
+	pid := strconv.Itoa(int(client.PID()))
 
-	localStationURL := localStation.EncodeToString()
+	localStation.SetAddress(&address)
+	localStation.SetPort(&port)
+	localStation.SetNatf(&natf)
+	localStation.SetNatm(&natm)
+	localStation.SetType(&type_)
+	localStation.SetPid(&pid)
+>>>>>>> 25dcb37f47cc6f3d3a49978776c564b8484df470
+
+	globalStationURL := localStation.EncodeToString()
+
+	if !doesSessionExist(client.PID()) {
+		addPlayerSession(client.PID(), []string{localStationURL, globalStationURL}, address, port)
+	} else {
+		updatePlayerSessionAll(client.PID(), []string{localStationURL, globalStationURL}, address, port)
+	}
 
 	rmcResponseStream := nex.NewStreamOut(nexServer)
 
