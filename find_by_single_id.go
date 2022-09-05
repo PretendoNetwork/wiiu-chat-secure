@@ -8,6 +8,8 @@ import (
 func findBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 	caller, _, _ := getCallInfoByCaller(id)
 
+	result := true
+
 	gathering := nexproto.NewGathering()
 	gathering.ID = id
 	gathering.OwnerPID = caller
@@ -16,15 +18,16 @@ func findBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 	gathering.MaximumParticipants = 2
 	gathering.Description = "Doors Invite Request"
 
-	outStream := nex.NewStreamOut(nexServer)
-	outStream.WriteBool(true)
-	outStream.WriteString("Gathering")
-	b := gathering.Bytes(nex.NewStreamOut(nexServer))
-	outStream.WriteUInt32LE(uint32(4) + uint32(len(b)))
-	outStream.WriteBuffer(b)
+	dataHolder := nex.NewDataHolder()
+	dataHolder.SetTypeName("Gathering")
+	dataHolder.SetObjectData(gathering)
+
+	rmcResponseStream := nex.NewStreamOut(nexServer)
+	rmcResponseStream.WriteBool(result)
+	rmcResponseStream.WriteDataHolder(dataHolder)
 
 	rmcResponse := nex.NewRMCResponse(nexproto.MatchMakingMethodFindBySingleID, callID)
-	rmcResponse.SetSuccess(nexproto.MatchMakingProtocolID, outStream.Bytes())
+	rmcResponse.SetSuccess(nexproto.MatchMakingProtocolID, rmcResponseStream.Bytes())
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
