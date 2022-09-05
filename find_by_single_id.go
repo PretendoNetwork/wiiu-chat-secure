@@ -6,7 +6,7 @@ import (
 )
 
 func findBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
-	caller, _, _ := getCallInfoByCaller(id)
+	caller := id // Gathering ID and caller are the same here
 
 	result := true
 
