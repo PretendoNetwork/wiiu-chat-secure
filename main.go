@@ -61,15 +61,15 @@ func main() {
 	matchMakingServer.GetSessionURLs(getSessionUrls)
 
 	secureServer.AddConnection(func(rvcid uint32, urls []string, ip, port string) {
-		pid := nexServer.FindClientFromConnectionID(rvcid)
+		pid := nexServer.FindClientFromConnectionID(rvcid).PID()
 		addPlayerSession(pid, urls, ip, port)
 	})
 	secureServer.UpdateConnection(func(rvcid uint32, urls []string, ip, port string) {
-		pid := nexServer.FindClientFromConnectionID(rvcid)
+		pid := nexServer.FindClientFromConnectionID(rvcid).PID()
 		updatePlayerSessionAll(pid, urls, ip, port)
 	})
 	secureServer.DoesConnectionExist(func(rvcid uint32) bool {
-		pid := nexServer.FindClientFromConnectionID(rvcid)
+		pid := nexServer.FindClientFromConnectionID(rvcid).PID()
 		return doesSessionExist(pid)
 	})
 
