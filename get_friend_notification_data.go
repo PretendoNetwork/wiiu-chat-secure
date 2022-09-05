@@ -1,12 +1,16 @@
 package main
 
 import (
+	"fmt"
+
 	nex "github.com/PretendoNetwork/nex-go"
 
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
 )
 
 func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
+	fmt.Println(client.PID()) // DEBUG
+
 	notifications := make([]*nexproto.NotificationEvent, 0)
 
 	caller, target, ringing := getCallInfoByTarget(client.PID())
