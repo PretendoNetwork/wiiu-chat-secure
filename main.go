@@ -19,6 +19,8 @@ func main() {
 	nexServer.SetKerberosKeySize(32)
 	nexServer.SetKerberosPassword(os.Getenv("KERBEROS_PASSWORD"))
 	nexServer.SetAccessKey("e7a47214")
+	nexServer.SetNexVersion(30000)
+	nexServer.SetPingTimeout(65535)
 
 	nexServer.On("Data", func(packet *nex.PacketV1) {
 		request := packet.RMCRequest()
@@ -58,9 +60,25 @@ func main() {
 	matchMakingServer.FindBySingleID(findBySingleID)
 	matchMakingServer.GetSessionURLs(getSessionUrls)
 
-	secureServer.AddConnection(addPlayerSession)
-	secureServer.UpdateConnection(updatePlayerSessionAll)
-	secureServer.DoesConnectionExist(doesSessionExist)
+	secureServer.AddConnection(func(rvcid uint32, urls []string, ip, port string) {
+		pid := nexServer.FindClientFromConnectionID(rvcid)
+		addPlayerSession(pid, urls, ip, port)
+	})
+	secureServer.UpdateConnection(func(rvcid uint32, urls []string, ip, port string) {
+		pid := nexServer.FindClientFromConnectionID(rvcid)
+		updatePlayerSessionAll(pid, urls, ip, port)
+	})
+	secureServer.DoesConnectionExist(func(rvcid uint32) bool {
+		pid := nexServer.FindClientFromConnectionID(rvcid)
+		return doesSessionExist(pid)
+	})
+
+	nexServer.On("Connect", func(packet *nex.PacketV1) {
+		if !isUserAllowed(packet.Sender().PID()) {
+			nexServer.Kick(packet.Sender())
+			// get outta here
+		}
+	})
 
 	nexServer.Listen(":60005")
 }
