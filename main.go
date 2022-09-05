@@ -73,12 +73,5 @@ func main() {
 		return doesSessionExist(pid)
 	})
 
-	nexServer.On("Connect", func(packet *nex.PacketV1) {
-		if !isUserAllowed(packet.Sender().PID()) {
-			nexServer.Kick(packet.Sender())
-			// get outta here
-		}
-	})
-
 	nexServer.Listen(":60005")
 }

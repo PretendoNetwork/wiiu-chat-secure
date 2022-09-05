@@ -140,6 +140,13 @@ func updatePlayerSessionAll(pid uint32, urls []string, ip string, port string) {
 	}
 }
 
+func updatePlayerSessionPort(pid uint32, port string) {
+	_, err := sessionsCollection.UpdateOne(context.TODO(), bson.D{{"pid", pid}}, bson.D{{"$set", bson.D{{"port", port}}}})
+	if err != nil {
+		panic(err)
+	}
+}
+
 func updatePlayerSessionUrl(pid uint32, oldurl string, newurl string) {
 	var result bson.M
 

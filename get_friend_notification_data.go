@@ -11,6 +11,11 @@ import (
 func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
 	fmt.Println(client.PID()) // DEBUG
 
+	if !isUserAllowed(client.PID()) {
+		nexServer.Kick(client)
+		// get outta here
+	}
+
 	notifications := make([]*nexproto.NotificationEvent, 0)
 
 	caller, target, ringing := getCallInfoByTarget(client.PID())

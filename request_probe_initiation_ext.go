@@ -31,15 +31,21 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 
 	nexServer.Send(responsePacket)
 
-	rmcMessage := nex.RMCRequest{}
-	rmcMessage.SetProtocolID(nexproto.NATTraversalProtocolID)
-	rmcMessage.SetCallID(0xffff0000 + callID)
-	rmcMessage.SetMethodID(nexproto.NATTraversalMethodInitiateProbe)
+	// Send probe to other users
+
 	rmcRequestStream := nex.NewStreamOut(nexServer)
+
 	rmcRequestStream.WriteString(stationToProbe)
+
 	rmcRequestBody := rmcRequestStream.Bytes()
-	rmcMessage.SetParameters(rmcRequestBody)
-	rmcMessageBytes := rmcMessage.Bytes()
+
+	rmcRequest := nex.NewRMCRequest()
+	rmcRequest.SetProtocolID(nexproto.NATTraversalProtocolID)
+	rmcRequest.SetCallID(3810693103)
+	rmcRequest.SetMethodID(nexproto.NATTraversalMethodInitiateProbe)
+	rmcRequest.SetParameters(rmcRequestBody)
+
+	rmcRequestBytes := rmcRequest.Bytes()
 
 	for _, target := range targetList {
 		targetUrl := nex.NewStationURL(target)
@@ -47,17 +53,17 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 		targetClient := nexServer.FindClientFromPID(uint32(targetPID))
 		fmt.Println(targetClient)
 		if targetClient != nil {
-			messagePacket, _ := nex.NewPacketV1(targetClient, nil)
-			messagePacket.SetVersion(1)
-			messagePacket.SetSource(0xA1)
-			messagePacket.SetDestination(0xAF)
-			messagePacket.SetType(nex.DataPacket)
-			messagePacket.SetPayload(rmcMessageBytes)
+			requestPacket, _ := nex.NewPacketV1(targetClient, nil)
+			requestPacket.SetVersion(1)
+			requestPacket.SetSource(0xA1)
+			requestPacket.SetDestination(0xAF)
+			requestPacket.SetType(nex.DataPacket)
+			requestPacket.SetPayload(rmcRequestBytes)
 
-			messagePacket.AddFlag(nex.FlagNeedsAck)
-			messagePacket.AddFlag(nex.FlagReliable)
+			requestPacket.AddFlag(nex.FlagNeedsAck)
+			requestPacket.AddFlag(nex.FlagReliable)
 
-			nexServer.Send(messagePacket)
+			nexServer.Send(requestPacket)
 		}
 	}
 }
