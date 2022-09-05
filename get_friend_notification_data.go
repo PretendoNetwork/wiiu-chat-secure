@@ -1,39 +1,32 @@
 package main
 
 import (
-	"fmt"
-
 	nex "github.com/PretendoNetwork/nex-go"
 
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
 )
 
 func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
+	notifications := make([]*nexproto.NotificationEvent, 0)
 
-	fmt.Printf("uiType: %d\r\n", uiType)
+	caller, target, ringing := getCallInfoByTarget(client.PID())
+
+	// TODO: Multiple calls. Wii U Chat can handle it, but we don't support it yet
+	if (caller != 0) && (target == client.PID()) && ringing {
+		// Being called
+		notification := nexproto.NewNotificationEvent()
+
+		notification.PIDSource = caller
+		notification.Type = 101000
+		notification.Param1 = caller
+		notification.Param2 = target
+		notification.StrParam = "Invite Request"
+
+		notifications = append(notifications, notification)
+	}
 
 	rmcResponseStream := nex.NewStreamOut(nexServer)
-
-	/*
-		// List<NotificationEvent>
-
-		// This enableds auto-match making for calls
-		var caller uint32 = 1743126339
-		var target uint32 = 1424784406
-
-		event := nexproto.NewNotificationEvent()
-
-		event.PIDSource = caller          // Sender PID
-		event.Type = 101000               // Notification type
-		event.Param1 = caller             // Gathering ID
-		event.Param2 = target             // Recipient PID
-		event.StrParam = "Invite Request" // Unknown
-
-		rmcResponseStream.WriteUInt32LE(1)
-		rmcResponseStream.WriteStructure(event)
-	*/
-
-	rmcResponseStream.WriteUInt32LE(0) // No data for now
+	rmcResponseStream.WriteListStructure(notifications)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
@@ -54,11 +47,4 @@ func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiT
 	responsePacket.AddFlag(nex.FlagReliable)
 
 	nexServer.Send(responsePacket)
-
-	//// HANDLE INCOMING CALL ////
-
-	caller, target, ringing := getCallInfoByTarget(client.PID())
-	if (caller != 0) && (target == client.PID()) && ringing {
-		sendCallNotification(caller, target, callID)
-	}
 }
