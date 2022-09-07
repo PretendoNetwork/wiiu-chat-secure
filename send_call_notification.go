@@ -1,7 +1,7 @@
 package main
 
 import (
-	"strconv"
+	//"strconv"
 
 	nex "github.com/PretendoNetwork/nex-go"
 	nexproto "github.com/PretendoNetwork/nex-protocols-go"
@@ -27,10 +27,7 @@ func sendCallNotification(caller uint32, target uint32, callID uint32) {
 
 	rmcRequestBytes := rmcRequest.Bytes()
 
-	clientAddr := getPlayerSessionAddress(target)
-	targetUrl := nex.NewStationURL(clientAddr)
-	targetPID, _ := strconv.Atoi(targetUrl.PID())
-	targetClient := nexServer.FindClientFromPID(uint32(targetPID))
+	targetClient := nexServer.FindClientFromPID(uint32(target))
 
 	requestPacket, _ := nex.NewPacketV1(targetClient, nil)
 

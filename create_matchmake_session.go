@@ -1,7 +1,7 @@
 package main
 
 import (
-	"math/rand"
+	//"math/rand"
 
 	nex "github.com/PretendoNetwork/nex-go"
 
@@ -9,9 +9,9 @@ import (
 )
 
 func createMatchmakeSession(err error, client *nex.Client, callID uint32, matchmakeSession *nexproto.MatchmakeSession, message string, participationCount uint16) {
-	var gid uint32 = 1 // TODO: Random this
+	var gid uint32 = client.PID() // TODO: Random this
 	sessionKey := make([]byte, 32)
-	rand.Read(sessionKey)
+	//rand.Read(sessionKey)
 
 	rmcResponseStream := nex.NewStreamOut(nexServer)
 

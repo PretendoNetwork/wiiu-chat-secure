@@ -31,5 +31,4 @@ func joinMatchmakeSessionEx(err error, client *nex.Client, callID uint32, gid ui
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	nexServer.Send(responsePacket)
-}
+	nexServer.Send(responsePacket)}
