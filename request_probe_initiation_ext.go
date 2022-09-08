@@ -49,8 +49,8 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 
 	for _, target := range targetList {
 		targetUrl := nex.NewStationURL(target)
-		targetPID, _ := strconv.Atoi(targetUrl.PID())
-		targetClient := nexServer.FindClientFromPID(uint32(targetPID))
+		targetRVCID, _ := strconv.Atoi(targetUrl.RVCID())
+		targetClient := nexServer.FindClientFromConnectionID(uint32(targetRVCID))
 		fmt.Println(targetClient)
 		if targetClient != nil {
 			requestPacket, _ := nex.NewPacketV1(targetClient, nil)
