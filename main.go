@@ -45,6 +45,7 @@ func main() {
 	matchmakeExtensionServer := nexproto.NewMatchmakeExtensionProtocol(nexServer)
 	natTraversalServer := nexproto.NewNATTraversalProtocol(nexServer)
 	matchMakingServer := nexproto.NewMatchMakingProtocol(nexServer)
+	matchMakingExtServer := nexproto.NewMatchMakingExtProtocol(nexServer)
 
 	matchmakeExtensionServer.OpenParticipation(openParticipation)
 	matchmakeExtensionServer.CreateMatchmakeSession(createMatchmakeSession)
@@ -59,6 +60,8 @@ func main() {
 	matchMakingServer.UnregisterGathering(unregisterGathering)
 	matchMakingServer.FindBySingleID(findBySingleID)
 	matchMakingServer.GetSessionURLs(getSessionUrls)
+
+	matchMakingExtServer.EndParticipation(endParticipation)
 
 	secureServer.AddConnection(func(rvcid uint32, urls []string, ip, port string) {
 		pid := nexServer.FindClientFromConnectionID(rvcid).PID()
