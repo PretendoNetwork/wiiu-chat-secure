@@ -26,8 +26,8 @@ func findBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 	rmcResponseStream.WriteBool(result)
 	rmcResponseStream.WriteDataHolder(dataHolder)
 
-	rmcResponse := nex.NewRMCResponse(nexproto.MatchMakingMethodFindBySingleID, callID)
-	rmcResponse.SetSuccess(nexproto.MatchMakingProtocolID, rmcResponseStream.Bytes())
+	rmcResponse := nex.NewRMCResponse(nexproto.MatchMakingProtocolID, callID)
+	rmcResponse.SetSuccess(nexproto.MatchMakingMethodFindBySingleID, rmcResponseStream.Bytes())
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
