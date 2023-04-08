@@ -1,19 +1,19 @@
-package main
+package nex_nat_traversal
 
 import (
 	"fmt"
 
 	nex "github.com/PretendoNetwork/nex-go"
-
-	nexproto "github.com/PretendoNetwork/nex-protocols-go"
+	nat_traversal "github.com/PretendoNetwork/nex-protocols-go/nat-traversal"
+	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
-func reportNATTraversalResult(err error, client *nex.Client, callID uint32, cid uint32, result bool, rtt uint32) {
+func ReportNATTraversalResult(err error, client *nex.Client, callID uint32, cid uint32, result bool, rtt uint32) {
 	fmt.Println("DID NAT TRAVERSAL SUCCEED?")
 	fmt.Println(result)
 
-	rmcResponse := nex.NewRMCResponse(nexproto.NATTraversalProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.NATTraversalMethodReportNATTraversalResult, nil)
+	rmcResponse := nex.NewRMCResponse(nat_traversal.ProtocolID, callID)
+	rmcResponse.SetSuccess(nat_traversal.MethodReportNATTraversalResult, nil)
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
@@ -28,5 +28,5 @@ func reportNATTraversalResult(err error, client *nex.Client, callID uint32, cid 
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	nexServer.Send(responsePacket)
+	globals.NEXServer.Send(responsePacket)
 }

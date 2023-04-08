@@ -1,16 +1,17 @@
-package main
+package nex_match_making
 
 import (
 	nex "github.com/PretendoNetwork/nex-go"
-	nexproto "github.com/PretendoNetwork/nex-protocols-go"
+	match_making "github.com/PretendoNetwork/nex-protocols-go/match-making"
+	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
-func findBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
+func FindBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 	caller := id // Gathering ID and caller are the same here
 
 	result := true
 
-	gathering := nexproto.NewGathering()
+	gathering := match_making.NewGathering()
 	gathering.ID = id
 	gathering.OwnerPID = caller
 	gathering.HostPID = caller
@@ -22,12 +23,12 @@ func findBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 	dataHolder.SetTypeName("Gathering")
 	dataHolder.SetObjectData(gathering)
 
-	rmcResponseStream := nex.NewStreamOut(nexServer)
+	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
 	rmcResponseStream.WriteBool(result)
 	rmcResponseStream.WriteDataHolder(dataHolder)
 
-	rmcResponse := nex.NewRMCResponse(nexproto.MatchMakingProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.MatchMakingMethodFindBySingleID, rmcResponseStream.Bytes())
+	rmcResponse := nex.NewRMCResponse(match_making.ProtocolID, callID)
+	rmcResponse.SetSuccess(match_making.MethodFindBySingleID, rmcResponseStream.Bytes())
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
@@ -42,5 +43,5 @@ func findBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	nexServer.Send(responsePacket)
+	globals.NEXServer.Send(responsePacket)
 }

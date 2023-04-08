@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/PretendoNetwork/plogger-go"
+	"github.com/PretendoNetwork/wiiu-chat-secure/database"
 	"github.com/joho/godotenv"
 )
 
@@ -13,5 +14,5 @@ func init() {
 		logger.Warning("Error loading .env file")
 	}
 
-	connectMongo()
+	database.ConnectAll()
 }

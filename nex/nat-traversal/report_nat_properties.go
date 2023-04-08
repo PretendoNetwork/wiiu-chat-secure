@@ -1,15 +1,16 @@
-package main
+package nex_nat_traversal
 
 import (
 	"strconv"
 
 	nex "github.com/PretendoNetwork/nex-go"
-
-	nexproto "github.com/PretendoNetwork/nex-protocols-go"
+	nat_traversal "github.com/PretendoNetwork/nex-protocols-go/nat-traversal"
+	"github.com/PretendoNetwork/wiiu-chat-secure/database"
+	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
-func reportNATProperties(err error, client *nex.Client, callID uint32, natm uint32, natf uint32, rtt uint32) {
-	stationUrlsStrings := getPlayerUrls(client.PID())
+func ReportNATProperties(err error, client *nex.Client, callID uint32, natm uint32, natf uint32, rtt uint32) {
+	stationUrlsStrings := database.GetPlayerURLs(client.PID())
 	stationUrls := make([]nex.StationURL, len(stationUrlsStrings))
 	pid := strconv.FormatUint(uint64(client.PID()), 10)
 	rvcid := strconv.FormatUint(uint64(client.ConnectionID()), 10)
@@ -24,11 +25,11 @@ func reportNATProperties(err error, client *nex.Client, callID uint32, natm uint
 		}
 		stationUrls[i].SetPID(pid)
 		stationUrls[i].SetRVCID(rvcid)
-		updatePlayerSessionUrl(client.PID(), stationUrlsStrings[i], stationUrls[i].EncodeToString())
+		database.UpdatePlayerSessionUrl(client.PID(), stationUrlsStrings[i], stationUrls[i].EncodeToString())
 	}
 
-	rmcResponse := nex.NewRMCResponse(nexproto.NATTraversalProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.NATTraversalMethodReportNATProperties, nil)
+	rmcResponse := nex.NewRMCResponse(nat_traversal.ProtocolID, callID)
+	rmcResponse.SetSuccess(nat_traversal.MethodReportNATProperties, nil)
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
@@ -43,5 +44,5 @@ func reportNATProperties(err error, client *nex.Client, callID uint32, natm uint
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	nexServer.Send(responsePacket)
+	globals.NEXServer.Send(responsePacket)
 }

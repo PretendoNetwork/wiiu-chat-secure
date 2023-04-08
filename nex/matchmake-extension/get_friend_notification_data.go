@@ -1,30 +1,33 @@
-package main
+package nex_matchmake_extension
 
 import (
 	"fmt"
 
 	nex "github.com/PretendoNetwork/nex-go"
+	"github.com/PretendoNetwork/wiiu-chat-secure/database"
+	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 
-	nexproto "github.com/PretendoNetwork/nex-protocols-go"
+	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
+	"github.com/PretendoNetwork/nex-protocols-go/notifications"
 )
 
-func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
+func GetFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
 	fmt.Println(client.PID()) // DEBUG
 
 	/*if !isUserAllowed(client.PID()) {
-		nexServer.Kick(client)
+		globals.NEXServer.Kick(client)
 		// get outta here
 	}*/
 	// pls stay, whitelist is gone
 
-	notifications := make([]*nexproto.NotificationEvent, 0)
+	dataList := make([]*notifications.NotificationEvent, 0)
 
-	caller, target, ringing := getCallInfoByTarget(client.PID())
+	caller, target, ringing := database.GetCallInfoByTarget(client.PID())
 
 	// TODO: Multiple calls. Wii U Chat can handle it, but we don't support it yet
 	if (caller != 0) && (target == client.PID()) && ringing {
 		// Being called
-		notification := nexproto.NewNotificationEvent()
+		notification := notifications.NewNotificationEvent()
 
 		notification.PIDSource = caller
 		notification.Type = 101000
@@ -32,16 +35,16 @@ func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiT
 		notification.Param2 = target
 		notification.StrParam = "Invite Request"
 
-		notifications = append(notifications, notification)
+		dataList = append(dataList, notification)
 	}
 
-	rmcResponseStream := nex.NewStreamOut(nexServer)
-	rmcResponseStream.WriteListStructure(notifications)
+	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
+	rmcResponseStream.WriteListStructure(dataList)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
-	rmcResponse := nex.NewRMCResponse(nexproto.MatchmakeExtensionProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.MatchmakeExtensionMethodGetFriendNotificationData, rmcResponseBody)
+	rmcResponse := nex.NewRMCResponse(matchmake_extension.ProtocolID, callID)
+	rmcResponse.SetSuccess(matchmake_extension.MethodGetFriendNotificationData, rmcResponseBody)
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
@@ -56,5 +59,5 @@ func getFriendNotificationData(err error, client *nex.Client, callID uint32, uiT
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	nexServer.Send(responsePacket)
+	globals.NEXServer.Send(responsePacket)
 }

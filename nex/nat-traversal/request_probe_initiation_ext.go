@@ -1,20 +1,20 @@
-package main
+package nex_nat_traversal
 
 import (
 	"fmt"
 	"strconv"
 
 	nex "github.com/PretendoNetwork/nex-go"
-
-	nexproto "github.com/PretendoNetwork/nex-protocols-go"
+	nat_traversal "github.com/PretendoNetwork/nex-protocols-go/nat-traversal"
+	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
-func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, targetList []string, stationToProbe string) {
+func RequestProbeInitiationExt(err error, client *nex.Client, callID uint32, targetList []string, stationToProbe string) {
 	fmt.Println(targetList)
 	fmt.Println(stationToProbe)
 
-	rmcResponse := nex.NewRMCResponse(nexproto.NATTraversalProtocolID, callID)
-	rmcResponse.SetSuccess(nexproto.NATTraversalMethodRequestProbeInitiationExt, nil)
+	rmcResponse := nex.NewRMCResponse(nat_traversal.ProtocolID, callID)
+	rmcResponse.SetSuccess(nat_traversal.MethodRequestProbeInitiationExt, nil)
 
 	rmcResponseBytes := rmcResponse.Bytes()
 
@@ -29,20 +29,20 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	nexServer.Send(responsePacket)
+	globals.NEXServer.Send(responsePacket)
 
 	// Send probe to other users
 
-	rmcRequestStream := nex.NewStreamOut(nexServer)
+	rmcRequestStream := nex.NewStreamOut(globals.NEXServer)
 
 	rmcRequestStream.WriteString(stationToProbe)
 
 	rmcRequestBody := rmcRequestStream.Bytes()
 
 	rmcRequest := nex.NewRMCRequest()
-	rmcRequest.SetProtocolID(nexproto.NATTraversalProtocolID)
+	rmcRequest.SetProtocolID(nat_traversal.ProtocolID)
 	rmcRequest.SetCallID(3810693103)
-	rmcRequest.SetMethodID(nexproto.NATTraversalMethodInitiateProbe)
+	rmcRequest.SetMethodID(nat_traversal.MethodInitiateProbe)
 	rmcRequest.SetParameters(rmcRequestBody)
 
 	rmcRequestBytes := rmcRequest.Bytes()
@@ -50,7 +50,7 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 	for _, target := range targetList {
 		targetUrl := nex.NewStationURL(target)
 		targetRVCID, _ := strconv.Atoi(targetUrl.RVCID())
-		targetClient := nexServer.FindClientFromConnectionID(uint32(targetRVCID))
+		targetClient := globals.NEXServer.FindClientFromConnectionID(uint32(targetRVCID))
 		fmt.Println(targetClient)
 		if targetClient != nil {
 			requestPacket, _ := nex.NewPacketV1(targetClient, nil)
@@ -63,7 +63,7 @@ func requestProbeInitiationExt(err error, client *nex.Client, callID uint32, tar
 			requestPacket.AddFlag(nex.FlagNeedsAck)
 			requestPacket.AddFlag(nex.FlagReliable)
 
-			nexServer.Send(requestPacket)
+			globals.NEXServer.Send(requestPacket)
 		}
 	}
 }
