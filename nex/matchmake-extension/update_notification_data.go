@@ -1,32 +1,41 @@
 package nex_matchmake_extension
 
 import (
-	"fmt"
+	"log"
 
 	nex "github.com/PretendoNetwork/nex-go"
 	"github.com/PretendoNetwork/wiiu-chat-secure/database"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	"github.com/PretendoNetwork/wiiu-chat-secure/grpc"
 	nex_notifications "github.com/PretendoNetwork/wiiu-chat-secure/nex/notifications"
 
 	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
 )
 
 func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType uint32, uiParam1 uint32, uiParam2 uint32, strParam string) {
-	// TODO: Implement this
-	fmt.Printf("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
-
-	// kick player if invite cancellation to prevent app hanging indefinitely
-	if uiType == 102 {
-		database.EndCall(uiParam1)
-		globals.NEXServer.Kick(client)
-		return
-	}
+	log.Printf("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
 
 	if uiType == 101 {
 		database.NewCall(client.PID(), uiParam2)
+
+		// If they don't have a session with the app, tell Friends to alert them on the HOME menu.
 		if database.DoesSessionExist(uiParam2) {
-			nex_notifications.ProcessNotificationEvent(client.PID(), uiParam2, callID)
+			nex_notifications.ProcessNotificationEvent(callID, client.PID(), uiType, uiParam1, uiParam2, strParam)
+		} else {
+			grpc.SendIncomingCallNotification(client.PID(), uiParam2)
 		}
+	}
+
+	if uiType == 102 {
+		database.EndCall(uiParam1)
+
+		// Alert the other side we aren't calling anymore.
+		if database.DoesSessionExist(uiParam2) {
+			nex_notifications.ProcessNotificationEvent(callID, client.PID(), uiType, uiParam1, uiParam2, strParam)
+		}
+
+		// The user must be kicked, otherwise the app hangs forever.
+		globals.NEXServer.Kick(client)
 	}
 
 	// Build response packet
