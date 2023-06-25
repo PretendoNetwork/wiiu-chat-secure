@@ -35,7 +35,7 @@ func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType
 		}
 
 		// The user must be kicked, otherwise the app hangs forever.
-		globals.NEXServer.Kick(client)
+		globals.NEXServer.TimeoutKick(client)
 	}
 
 	// Build response packet

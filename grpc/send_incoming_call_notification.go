@@ -53,7 +53,7 @@ func SendIncomingCallNotification(caller uint32, target uint32) {
 	presence.GameKey.TitleVersion = 55
 
 	eventObject := nintendo_notifications.NewNintendoNotificationEvent()
-	eventObject.Type = 24
+	eventObject.Type = nintendo_notifications.NotificationTypes.FriendStartedTitle
 	eventObject.SenderPID = caller
 	eventObject.DataHolder = nex.NewDataHolder()
 	eventObject.DataHolder.SetTypeName("NintendoPresenceV2")
