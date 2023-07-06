@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func SendIncomingCallNotification(caller uint32, target uint32) {
+func SendFriendsNotification(caller uint32, target uint32, ringing bool) {
 	ctx := metadata.NewOutgoingContext(context.Background(), globals.GRPCFriendsCommonMetadata)
 
 	presence := friends_wiiu_types.NewNintendoPresenceV2()
@@ -21,10 +21,13 @@ func SendIncomingCallNotification(caller uint32, target uint32) {
 	presence.ChangedFlags = 0x1FF
 	presence.Online = true
 	presence.GameKey = friends_wiiu_types.NewGameKey()
-	presence.Unknown2 = 0x65
 	presence.GameServerID = 0x1005A000
 	presence.PID = 1 // This is not a PID, but the amount of times the PID is repeated in bytes in the application data.
 	presence.GatheringID = caller
+
+	if ringing {
+		presence.Unknown2 = 0x65
+	}
 
 	targetBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(targetBytes, target)

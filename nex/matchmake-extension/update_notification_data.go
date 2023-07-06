@@ -23,7 +23,7 @@ func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType
 		if recipientClient != nil && recipientClient.StationURLs() != nil {
 			nex_notifications.ProcessNotificationEvent(callID, client.PID(), notificationType, uiParam1, uiParam2, strParam)
 		} else {
-			grpc.SendIncomingCallNotification(client.PID(), uiParam2)
+			grpc.SendFriendsNotification(client.PID(), uiParam2, true)
 		}
 	}
 
@@ -35,6 +35,8 @@ func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType
 
 		if recipientClient != nil && recipientClient.StationURLs() != nil {
 			nex_notifications.ProcessNotificationEvent(callID, client.PID(), notificationType, uiParam1, uiParam2, strParam)
+		} else {
+			grpc.SendFriendsNotification(client.PID(), uiParam2, false)
 		}
 
 		// The user must be kicked, otherwise the app hangs forever.
