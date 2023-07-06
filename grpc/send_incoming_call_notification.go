@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 	"encoding/binary"
-	"log"
 
 	pb "github.com/PretendoNetwork/grpc-go/friends"
 	nex "github.com/PretendoNetwork/nex-go"
@@ -47,6 +46,6 @@ func SendIncomingCallNotification(caller uint32, target uint32) {
 
 	_, err := globals.GRPCFriendsClient.SendUserNotificationWiiU(ctx, &pb.SendUserNotificationWiiURequest{Pid: target, NotificationData: eventObjectBytes})
 	if err != nil {
-		log.Fatalf("Greeting Friends gRPC failed! : %v", err)
+		globals.Logger.Criticalf("Greeting Friends gRPC failed! : %v", err)
 	}
 }
