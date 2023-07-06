@@ -1,7 +1,6 @@
 package grpc
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
 	"log"
@@ -25,14 +24,13 @@ func SendIncomingCallNotification(caller uint32, target uint32) {
 	presence.GameKey = friends_wiiu_types.NewGameKey()
 	presence.Unknown2 = 0x65
 	presence.GameServerID = 0x1005A000
-	presence.PID = 4 // This is not a PID.
+	presence.PID = 1 // This is not a PID, but the amount of times the PID is repeated in bytes in the application data.
 	presence.GatheringID = caller
 
-	// The application data here is the PID, repeated 4 times. Why, you ask? Who knows!
 	targetBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(targetBytes, target)
 
-	presence.ApplicationData = bytes.Repeat(targetBytes, 4)
+	presence.ApplicationData = targetBytes
 
 	presence.GameKey.TitleID = 0x000500101005A100
 	presence.GameKey.TitleVersion = 55

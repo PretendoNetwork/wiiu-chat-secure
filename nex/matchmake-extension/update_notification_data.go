@@ -1,8 +1,6 @@
 package nex_matchmake_extension
 
 import (
-	"log"
-
 	nex "github.com/PretendoNetwork/nex-go"
 	"github.com/PretendoNetwork/wiiu-chat-secure/database"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
@@ -14,7 +12,7 @@ import (
 )
 
 func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType uint32, uiParam1 uint32, uiParam2 uint32, strParam string) {
-	log.Printf("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
+	globals.Logger.Infof("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
 	recipientClient := globals.NEXServer.FindClientFromPID(uiParam2)
 
 	if uiType == notifications.NotificationCategories.RequestJoinGathering {
