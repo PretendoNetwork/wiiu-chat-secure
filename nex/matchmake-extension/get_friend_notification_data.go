@@ -1,8 +1,6 @@
 package nex_matchmake_extension
 
 import (
-	"fmt"
-
 	nex "github.com/PretendoNetwork/nex-go"
 	"github.com/PretendoNetwork/wiiu-chat-secure/database"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
@@ -13,14 +11,6 @@ import (
 )
 
 func GetFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
-	fmt.Println(client.PID()) // DEBUG
-
-	/*if !isUserAllowed(client.PID()) {
-		globals.NEXServer.Kick(client)
-		// get outta here
-	}*/
-	// pls stay, whitelist is gone
-
 	dataList := make([]*notifications_types.NotificationEvent, 0)
 
 	caller, target, ringing := database.GetCallInfoByTarget(client.PID())

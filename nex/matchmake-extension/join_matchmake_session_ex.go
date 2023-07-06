@@ -1,8 +1,6 @@
 package nex_matchmake_extension
 
 import (
-	"fmt"
-
 	nex "github.com/PretendoNetwork/nex-go"
 	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
 	"github.com/PretendoNetwork/wiiu-chat-secure/database"
@@ -10,7 +8,7 @@ import (
 )
 
 func JoinMatchmakeSessionEx(err error, client *nex.Client, callID uint32, gid uint32, strMessage string, dontCareMyBlockList bool, participationCount uint16) {
-	fmt.Printf("gid: %d, strMessage: %s, dontCareMyBlockList: %t, participationCount: %d\r\n", gid, strMessage, dontCareMyBlockList, participationCount)
+	globals.Logger.Infof("gid: %d, strMessage: %s, dontCareMyBlockList: %t, participationCount: %d\r\n", gid, strMessage, dontCareMyBlockList, participationCount)
 
 	database.EndCallRinging(gid)
 
