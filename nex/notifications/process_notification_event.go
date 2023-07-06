@@ -3,14 +3,15 @@ package nex_notifications
 import (
 	nex "github.com/PretendoNetwork/nex-go"
 	"github.com/PretendoNetwork/nex-protocols-go/notifications"
+	notifications_types "github.com/PretendoNetwork/nex-protocols-go/notifications/types"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
 func ProcessNotificationEvent(callID uint32, pidSource uint32, uiType uint32, uiParam1 uint32, uiParam2 uint32, strParam string) {
-	event := notifications.NewNotificationEvent()
+	event := notifications_types.NewNotificationEvent()
 
 	event.PIDSource = pidSource // Sender PID
-	event.Type = uiType * 1000  // Notification type, multiplied 1000 times because... yes?
+	event.Type = uiType         // Notification type
 	event.Param1 = uiParam1     // Gathering ID
 	event.Param2 = uiParam2     // Recipient PID
 	event.StrParam = strParam   // Unknown

@@ -12,7 +12,7 @@ func GetSessionUrls(err error, client *nex.Client, callID uint32, gid uint32) {
 
 	hostpid, _, _ := database.GetCallInfoByCaller(gid)
 
-	stationUrlStrings = database.GetPlayerURLs(hostpid)
+	stationUrlStrings = globals.NEXServer.FindClientFromPID(hostpid).StationURLs()
 
 	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
 	rmcResponseStream.WriteListString(stationUrlStrings)

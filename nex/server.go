@@ -5,7 +5,7 @@ import (
 	"os"
 
 	nex "github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/wiiu-chat-secure/database"
+	_ "github.com/PretendoNetwork/nex-protocols-go"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
@@ -33,12 +33,10 @@ func StartNEXServer() {
 
 	globals.NEXServer.On("Kick", func(packet *nex.PacketV1) {
 		fmt.Println("Kick client event called")
-		database.DeletePlayerSession(packet.Sender().PID())
 	})
 
 	globals.NEXServer.On("Disconnect", func(packet *nex.PacketV1) {
 		fmt.Println("Disconnect client event called")
-		database.DeletePlayerSession(packet.Sender().PID())
 	})
 
 	// * Register the common handlers first so that they can be overridden if needed

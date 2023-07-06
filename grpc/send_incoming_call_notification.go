@@ -9,8 +9,9 @@ import (
 
 	pb "github.com/PretendoNetwork/grpc-go/friends"
 	nex "github.com/PretendoNetwork/nex-go"
-	friends_wiiu "github.com/PretendoNetwork/nex-protocols-go/friends/wiiu"
+	friends_wiiu_types "github.com/PretendoNetwork/nex-protocols-go/friends-wiiu/types"
 	nintendo_notifications "github.com/PretendoNetwork/nex-protocols-go/nintendo-notifications"
+	nintendo_notifications_types "github.com/PretendoNetwork/nex-protocols-go/nintendo-notifications/types"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -33,11 +34,11 @@ func SendIncomingCallNotification(caller uint32, target uint32) {
 
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	presence := friends_wiiu.NewNintendoPresenceV2()
+	presence := friends_wiiu_types.NewNintendoPresenceV2()
 
 	presence.ChangedFlags = 0x1FF
 	presence.Online = true
-	presence.GameKey = friends_wiiu.NewGameKey()
+	presence.GameKey = friends_wiiu_types.NewGameKey()
 	presence.Unknown2 = 0x65
 	presence.GameServerID = 0x1005A000
 	presence.PID = 4 // This is not a PID.
@@ -52,7 +53,7 @@ func SendIncomingCallNotification(caller uint32, target uint32) {
 	presence.GameKey.TitleID = 0x000500101005A100
 	presence.GameKey.TitleVersion = 55
 
-	eventObject := nintendo_notifications.NewNintendoNotificationEvent()
+	eventObject := nintendo_notifications_types.NewNintendoNotificationEvent()
 	eventObject.Type = nintendo_notifications.NotificationTypes.FriendStartedTitle
 	eventObject.SenderPID = caller
 	eventObject.DataHolder = nex.NewDataHolder()
