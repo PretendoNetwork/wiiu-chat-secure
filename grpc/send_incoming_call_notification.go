@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/binary"
 	"log"
-	"os"
 
 	pb "github.com/PretendoNetwork/grpc-go/friends"
 	nex "github.com/PretendoNetwork/nex-go"
@@ -13,26 +12,11 @@ import (
 	nintendo_notifications "github.com/PretendoNetwork/nex-protocols-go/nintendo-notifications"
 	nintendo_notifications_types "github.com/PretendoNetwork/nex-protocols-go/nintendo-notifications/types"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
 func SendIncomingCallNotification(caller uint32, target uint32) {
-	// Connect to Friends gRPC.
-	conn, err := grpc.Dial(os.Getenv("FRIENDS_GRPC_ADDRESS"), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Connection to Friends gRPC failed! : %v", err)
-	}
-
-	defer conn.Close()
-	c := pb.NewFriendsClient(conn)
-
-	md := metadata.Pairs(
-		"X-API-Key", os.Getenv("FRIENDS_GRPC_API_KEY"),
-	)
-
-	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx := metadata.NewOutgoingContext(context.Background(), globals.GRPCFriendsCommonMetadata)
 
 	presence := friends_wiiu_types.NewNintendoPresenceV2()
 
@@ -63,7 +47,7 @@ func SendIncomingCallNotification(caller uint32, target uint32) {
 	stream := nex.NewStreamOut(globals.NEXServer)
 	eventObjectBytes := eventObject.Bytes(stream)
 
-	_, err = c.SendUserNotificationWiiU(ctx, &pb.SendUserNotificationWiiURequest{Pid: target, NotificationData: eventObjectBytes})
+	_, err := globals.GRPCFriendsClient.SendUserNotificationWiiU(ctx, &pb.SendUserNotificationWiiURequest{Pid: target, NotificationData: eventObjectBytes})
 	if err != nil {
 		log.Fatalf("Greeting Friends gRPC failed! : %v", err)
 	}
