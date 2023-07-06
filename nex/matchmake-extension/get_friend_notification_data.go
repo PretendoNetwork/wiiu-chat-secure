@@ -16,7 +16,7 @@ func GetFriendNotificationData(err error, client *nex.Client, callID uint32, uiT
 	caller, target, ringing := database.GetCallInfoByTarget(client.PID())
 
 	// TODO: Multiple calls. Wii U Chat can handle it, but we don't support it yet
-	if (caller != 0) && (target == client.PID()) && ringing {
+	if caller != 0 && target == client.PID() && ringing {
 		// Being called
 		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.RequestJoinGathering, notifications.NotificationSubTypes.RequestJoinGathering.None)
 

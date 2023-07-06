@@ -17,7 +17,7 @@ func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType
 	log.Printf("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
 	recipientClient := globals.NEXServer.FindClientFromPID(uiParam2)
 
-	if uiType == 101 {
+	if uiType == notifications.NotificationCategories.RequestJoinGathering {
 		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.RequestJoinGathering, notifications.NotificationSubTypes.RequestJoinGathering.None)
 		database.NewCall(client.PID(), uiParam2)
 
@@ -29,7 +29,7 @@ func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType
 		}
 	}
 
-	if uiType == 102 {
+	if uiType == notifications.NotificationCategories.EndGathering {
 		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.EndGathering, notifications.NotificationSubTypes.EndGathering.None)
 		database.EndCall(uiParam1)
 
