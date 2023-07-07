@@ -18,7 +18,6 @@ func SendFriendsNotification(caller uint32, target uint32, ringing bool) {
 
 	presence := friends_wiiu_types.NewNintendoPresenceV2()
 
-	presence.ChangedFlags = 0x1FF
 	presence.Online = true
 	presence.GameKey = friends_wiiu_types.NewGameKey()
 	presence.GameServerID = 0x1005A000
