@@ -5,7 +5,7 @@ import (
 	"os"
 
 	nex "github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/wiiu-chat-secure/database"
+	_ "github.com/PretendoNetwork/nex-protocols-go"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
@@ -13,7 +13,7 @@ func StartNEXServer() {
 	globals.NEXServer = nex.NewServer()
 	globals.NEXServer.SetPRUDPVersion(1)
 	globals.NEXServer.SetPRUDPProtocolMinorVersion(2)
-	globals.NEXServer.SetKerberosPassword(os.Getenv("KERBEROS_PASSWORD"))
+	globals.NEXServer.SetKerberosPassword(os.Getenv("PN_WIIU_CHAT_KERBEROS_PASSWORD"))
 	globals.NEXServer.SetAccessKey("e7a47214")
 	globals.NEXServer.SetDefaultNEXVersion(&nex.NEXVersion{
 		Major: 3,
@@ -29,16 +29,6 @@ func StartNEXServer() {
 		fmt.Printf("Protocol ID: %#v\n", request.ProtocolID())
 		fmt.Printf("Method ID: %#v\n", request.MethodID())
 		fmt.Println("======================")
-	})
-
-	globals.NEXServer.On("Kick", func(packet *nex.PacketV1) {
-		fmt.Println("Kick client event called")
-		database.DeletePlayerSession(packet.Sender().PID())
-	})
-
-	globals.NEXServer.On("Disconnect", func(packet *nex.PacketV1) {
-		fmt.Println("Disconnect client event called")
-		database.DeletePlayerSession(packet.Sender().PID())
 	})
 
 	// * Register the common handlers first so that they can be overridden if needed

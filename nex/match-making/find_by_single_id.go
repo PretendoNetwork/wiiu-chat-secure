@@ -3,6 +3,7 @@ package nex_match_making
 import (
 	nex "github.com/PretendoNetwork/nex-go"
 	match_making "github.com/PretendoNetwork/nex-protocols-go/match-making"
+	match_making_types "github.com/PretendoNetwork/nex-protocols-go/match-making/types"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
@@ -11,7 +12,7 @@ func FindBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 
 	result := true
 
-	gathering := match_making.NewGathering()
+	gathering := match_making_types.NewGathering()
 	gathering.ID = id
 	gathering.OwnerPID = caller
 	gathering.HostPID = caller

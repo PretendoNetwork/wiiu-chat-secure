@@ -1,32 +1,46 @@
 package nex_matchmake_extension
 
 import (
-	"fmt"
-
 	nex "github.com/PretendoNetwork/nex-go"
 	"github.com/PretendoNetwork/wiiu-chat-secure/database"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	"github.com/PretendoNetwork/wiiu-chat-secure/grpc"
 	nex_notifications "github.com/PretendoNetwork/wiiu-chat-secure/nex/notifications"
 
 	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
+	"github.com/PretendoNetwork/nex-protocols-go/notifications"
 )
 
 func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType uint32, uiParam1 uint32, uiParam2 uint32, strParam string) {
-	// TODO: Implement this
-	fmt.Printf("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
+	globals.Logger.Infof("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
+	recipientClient := globals.NEXServer.FindClientFromPID(uiParam2)
 
-	// kick player if invite cancellation to prevent app hanging indefinitely
-	if uiType == 102 {
-		database.EndCall(uiParam1)
-		globals.NEXServer.Kick(client)
-		return
+	if uiType == notifications.NotificationCategories.RequestJoinGathering {
+		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.RequestJoinGathering, notifications.NotificationSubTypes.RequestJoinGathering.None)
+		database.NewCall(client.PID(), uiParam2)
+
+		// If they don't have a session with the app, tell Friends to alert them on the HOME menu.
+		if recipientClient != nil && recipientClient.StationURLs() != nil {
+			nex_notifications.ProcessNotificationEvent(callID, client.PID(), notificationType, uiParam1, uiParam2, strParam)
+		} else {
+			grpc.SendFriendsNotification(client.PID(), uiParam2, true)
+		}
 	}
 
-	if uiType == 101 {
-		database.NewCall(client.PID(), uiParam2)
-		if database.DoesSessionExist(uiParam2) {
-			nex_notifications.ProcessNotificationEvent(client.PID(), uiParam2, callID)
+	if uiType == notifications.NotificationCategories.EndGathering {
+		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.EndGathering, notifications.NotificationSubTypes.EndGathering.None)
+		database.EndCall(uiParam1)
+
+		// Alert the other side we aren't calling anymore.
+
+		if recipientClient != nil && recipientClient.StationURLs() != nil {
+			nex_notifications.ProcessNotificationEvent(callID, client.PID(), notificationType, uiParam1, uiParam2, strParam)
+		} else {
+			grpc.SendFriendsNotification(client.PID(), uiParam2, false)
 		}
+
+		// The user must be kicked, otherwise the app hangs forever.
+		globals.NEXServer.TimeoutKick(client)
 	}
 
 	// Build response packet

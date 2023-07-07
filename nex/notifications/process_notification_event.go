@@ -3,26 +3,18 @@ package nex_notifications
 import (
 	nex "github.com/PretendoNetwork/nex-go"
 	"github.com/PretendoNetwork/nex-protocols-go/notifications"
+	notifications_types "github.com/PretendoNetwork/nex-protocols-go/notifications/types"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
-// * This technically is not the right way to format an RMC handler
-// * since it imples that the request format is "caller uint32, target uint32, callID uint32"
-// * when really the data we are sending in this function is the
-// * request format
-// *
-// * This is just a convenient way to handle sending notifications
-// * since the server never gets requests for this protocol
-// TODO - Maybe refactor this so that it's more in line with the spec?
+func ProcessNotificationEvent(callID uint32, pidSource uint32, uiType uint32, uiParam1 uint32, uiParam2 uint32, strParam string) {
+	event := notifications_types.NewNotificationEvent()
 
-func ProcessNotificationEvent(caller uint32, target uint32, callID uint32) {
-	event := notifications.NewNotificationEvent()
-
-	event.PIDSource = caller          // Sender PID
-	event.Type = 101000               // Notification type
-	event.Param1 = caller             // Gathering ID
-	event.Param2 = target             // Recipient PID
-	event.StrParam = "Invite Request" // Unknown
+	event.PIDSource = pidSource // Sender PID
+	event.Type = uiType         // Notification type
+	event.Param1 = uiParam1     // Gathering ID
+	event.Param2 = uiParam2     // Recipient PID
+	event.StrParam = strParam   // Unknown
 
 	eventObject := nex.NewStreamOut(globals.NEXServer)
 	eventObject.WriteStructure(event)
@@ -35,7 +27,7 @@ func ProcessNotificationEvent(caller uint32, target uint32, callID uint32) {
 
 	rmcRequestBytes := rmcRequest.Bytes()
 
-	targetClient := globals.NEXServer.FindClientFromPID(uint32(target))
+	targetClient := globals.NEXServer.FindClientFromPID(uiParam2)
 
 	requestPacket, _ := nex.NewPacketV1(targetClient, nil)
 

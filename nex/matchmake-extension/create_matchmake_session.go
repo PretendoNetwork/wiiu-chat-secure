@@ -6,11 +6,10 @@ import (
 	nex "github.com/PretendoNetwork/nex-go"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 
-	match_making "github.com/PretendoNetwork/nex-protocols-go/match-making"
 	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
 )
 
-func CreateMatchmakeSession(err error, client *nex.Client, callID uint32, matchmakeSession *match_making.MatchmakeSession, message string, participationCount uint16) {
+func CreateMatchmakeSession(err error, client *nex.Client, callID uint32, anyGathering *nex.DataHolder, message string, participationCount uint16) {
 	var gid uint32 = client.PID() // TODO: Random this
 	sessionKey := make([]byte, 32)
 	//rand.Read(sessionKey)

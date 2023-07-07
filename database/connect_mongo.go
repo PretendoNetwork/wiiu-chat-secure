@@ -23,7 +23,7 @@ var callsCollection *mongo.Collection
 var tourneysCollection *mongo.Collection
 
 func connectMongo() {
-	mongoClient, _ = mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+	mongoClient, _ = mongo.NewClient(options.Client().ApplyURI(os.Getenv("PN_WIIU_CHAT_MONGO_URI")))
 	mongoContext, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	_ = mongoClient.Connect(mongoContext)
 
