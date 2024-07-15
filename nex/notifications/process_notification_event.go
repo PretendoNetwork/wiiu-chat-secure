@@ -2,6 +2,7 @@ package nex_notifications
 
 import (
 	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/constants"
 	"github.com/PretendoNetwork/nex-go/v2/types"
 	notifications "github.com/PretendoNetwork/nex-protocols-go/v2/notifications"
 	notifications_types "github.com/PretendoNetwork/nex-protocols-go/v2/notifications/types"
@@ -27,7 +28,9 @@ func ProcessNotificationEvent(callID uint32, pidSource uint32, uiType uint32, ui
 
 	requestPacket, _ := nex.NewPRUDPPacketV1(globals.SecureServer, targetClient, nil)
 
-	requestPacket.SetType(1) // TODO: is this correct?
+	requestPacket.SetType(constants.DataPacket)
+	requestPacket.AddFlag(constants.PacketFlagNeedsAck)
+	requestPacket.AddFlag(constants.PacketFlagReliable)
 	requestPacket.SetPayload(rmcRequestBytes)
 
 	globals.SecureServer.Send(requestPacket)
