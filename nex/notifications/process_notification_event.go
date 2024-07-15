@@ -1,44 +1,34 @@
 package nex_notifications
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/nex-protocols-go/notifications"
-	notifications_types "github.com/PretendoNetwork/nex-protocols-go/notifications/types"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	notifications "github.com/PretendoNetwork/nex-protocols-go/v2/notifications"
+	notifications_types "github.com/PretendoNetwork/nex-protocols-go/v2/notifications/types"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
 func ProcessNotificationEvent(callID uint32, pidSource uint32, uiType uint32, uiParam1 uint32, uiParam2 uint32, strParam string) {
 	event := notifications_types.NewNotificationEvent()
 
-	event.PIDSource = pidSource // Sender PID
-	event.Type = uiType         // Notification type
-	event.Param1 = uiParam1     // Gathering ID
-	event.Param2 = uiParam2     // Recipient PID
-	event.StrParam = strParam   // Unknown
+	event.PIDSource = types.NewPID(uint64(pidSource)) // Sender PID
+	event.Type.Value = uiType                         // Notification type
+	event.Param1.Value = uiParam1                     // Gathering ID
+	event.Param2.Value = uiParam2                     // Recipient PID
+	event.StrParam.Value = strParam                   // Unknown
 
-	eventObject := nex.NewStreamOut(globals.NEXServer)
-	eventObject.WriteStructure(event)
+	eventObject := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureEndpoint.ByteStreamSettings()) // TODO: use the endpoint library versions/byte stream settings
+	event.WriteTo(eventObject)
 
-	rmcRequest := nex.NewRMCRequest()
-	rmcRequest.SetProtocolID(notifications.ProtocolID)
-	rmcRequest.SetCallID(0xFFFF + callID)
-	rmcRequest.SetMethodID(notifications.MethodProcessNotificationEvent)
-	rmcRequest.SetParameters(eventObject.Bytes())
-
+	rmcRequest := nex.NewRMCRequest(notifications.NewProtocol().Endpoint()) // TODO: check
 	rmcRequestBytes := rmcRequest.Bytes()
 
-	targetClient := globals.NEXServer.FindClientFromPID(uiParam2)
+	targetClient := globals.SecureEndpoint.FindConnectionByPID(uint64(uiParam2))
 
-	requestPacket, _ := nex.NewPacketV1(targetClient, nil)
+	requestPacket, _ := nex.NewPRUDPPacketV1(globals.SecureServer, targetClient, nil)
 
-	requestPacket.SetVersion(1)
-	requestPacket.SetSource(0xA1)
-	requestPacket.SetDestination(0xAF)
-	requestPacket.SetType(nex.DataPacket)
+	requestPacket.SetType(1) // TODO: is this correct?
 	requestPacket.SetPayload(rmcRequestBytes)
 
-	requestPacket.AddFlag(nex.FlagNeedsAck)
-	requestPacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(requestPacket)
+	globals.SecureServer.Send(requestPacket)
 }

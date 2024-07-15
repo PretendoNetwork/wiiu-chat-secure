@@ -1,13 +1,31 @@
 package nex
 
 import (
-	nat_traversal "github.com/PretendoNetwork/nex-protocols-common-go/nat-traversal"
-	secureconnection "github.com/PretendoNetwork/nex-protocols-common-go/secure-connection"
-
+	common_matchmaking "github.com/PretendoNetwork/nex-protocols-common-go/v2/match-making"
+	common_matchmakingext "github.com/PretendoNetwork/nex-protocols-common-go/v2/match-making-ext"
+	common_nattraversal "github.com/PretendoNetwork/nex-protocols-common-go/v2/nat-traversal"
+	common_secure "github.com/PretendoNetwork/nex-protocols-common-go/v2/secure-connection"
+	matchmaking "github.com/PretendoNetwork/nex-protocols-go/v2/match-making"
+	matchmakingext "github.com/PretendoNetwork/nex-protocols-go/v2/match-making-ext"
+	nattraversal "github.com/PretendoNetwork/nex-protocols-go/v2/nat-traversal"
+	secure "github.com/PretendoNetwork/nex-protocols-go/v2/secure-connection"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
 func registerCommonProtocols() {
-	nat_traversal.NewCommonNATTraversalProtocol(globals.NEXServer)
-	secureconnection.NewCommonSecureConnectionProtocol(globals.NEXServer)
+	secureProtocol := secure.NewProtocol()
+	globals.SecureEndpoint.RegisterServiceProtocol(secureProtocol)
+	common_secure.NewCommonProtocol(secureProtocol)
+
+	natTraversalProtocol := nattraversal.NewProtocol()
+	globals.SecureEndpoint.RegisterServiceProtocol(natTraversalProtocol)
+	common_nattraversal.NewCommonProtocol(natTraversalProtocol)
+
+	matchMakingProtocol := matchmaking.NewProtocol()
+	globals.SecureEndpoint.RegisterServiceProtocol(matchMakingProtocol)
+	common_matchmaking.NewCommonProtocol(matchMakingProtocol)
+
+	matchMakingExtProtocol := matchmakingext.NewProtocol()
+	globals.SecureEndpoint.RegisterServiceProtocol(matchMakingExtProtocol)
+	common_matchmakingext.NewCommonProtocol(matchMakingExtProtocol)
 }

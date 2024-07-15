@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetCallInfoByTarget(target uint32) (uint32, uint32, bool) { // caller pid, target pid, ringing
+func GetCallInfoByTarget(target uint64) (uint64, uint64, bool) { // caller pid, target pid, ringing
 	var result bson.M
 	filter := bson.D{
 		{"target_pid", target},
@@ -22,6 +22,6 @@ func GetCallInfoByTarget(target uint32) (uint32, uint32, bool) { // caller pid, 
 			panic(err)
 		}
 	} else {
-		return uint32(result["caller_pid"].(int64)), uint32(result["target_pid"].(int64)), result["ringing"].(bool)
+		return uint64(result["caller_pid"].(int64)), uint64(result["target_pid"].(int64)), result["ringing"].(bool)
 	}
 }

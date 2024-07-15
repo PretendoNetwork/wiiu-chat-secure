@@ -2,32 +2,28 @@ package nex
 
 import (
 	"fmt"
-	"os"
 
-	nex "github.com/PretendoNetwork/nex-go"
-	_ "github.com/PretendoNetwork/nex-protocols-go"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	_ "github.com/PretendoNetwork/nex-protocols-go/v2"
 	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 )
 
 func StartNEXServer() {
-	globals.NEXServer = nex.NewServer()
-	globals.NEXServer.SetPRUDPVersion(1)
-	globals.NEXServer.SetPRUDPProtocolMinorVersion(2)
-	globals.NEXServer.SetKerberosPassword(os.Getenv("PN_WIIU_CHAT_KERBEROS_PASSWORD"))
-	globals.NEXServer.SetAccessKey("e7a47214")
-	globals.NEXServer.SetDefaultNEXVersion(&nex.NEXVersion{
-		Major: 3,
-		Minor: 4,
-		Patch: 2,
-	})
-	globals.NEXServer.SetPingTimeout(65535)
+	globals.SecureServer = nex.NewPRUDPServer()
 
-	globals.NEXServer.On("Data", func(packet *nex.PacketV1) {
-		request := packet.RMCRequest()
+	globals.SecureEndpoint = nex.NewPRUDPEndPoint(1)
+	globals.SecureEndpoint.IsSecureEndPoint = true
+	globals.SecureEndpoint.SetAccessKey("e7a47214")
+	globals.SecureServer.LibraryVersions.SetDefault(nex.NewLibraryVersion(3, 4, 2))
+	globals.SecureServer.BindPRUDPEndPoint(globals.SecureEndpoint)
+	// globals.SecureServer.SetPingTimeout(65535) // TODO: what to replace with
+
+	globals.SecureEndpoint.OnData(func(packet nex.PacketInterface) {
+		request := packet.RMCMessage()
 
 		fmt.Println("==WiiU Chat - Secure==")
-		fmt.Printf("Protocol ID: %#v\n", request.ProtocolID())
-		fmt.Printf("Method ID: %#v\n", request.MethodID())
+		fmt.Printf("Protocol ID: %#v\n", request.ProtocolID)
+		fmt.Printf("Method ID: %#v\n", request.MethodID)
 		fmt.Println("======================")
 	})
 
@@ -35,5 +31,5 @@ func StartNEXServer() {
 	registerCommonProtocols()
 	registerNEXProtocols()
 
-	globals.NEXServer.Listen(":60005")
+	globals.SecureServer.Listen(60005)
 }

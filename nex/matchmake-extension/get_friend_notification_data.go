@@ -1,56 +1,48 @@
-package nex_matchmake_extension
+package matchmake_extension
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
 	"github.com/PretendoNetwork/wiiu-chat-secure/database"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
 
-	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
-	"github.com/PretendoNetwork/nex-protocols-go/notifications"
-	notifications_types "github.com/PretendoNetwork/nex-protocols-go/notifications/types"
+	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/v2/matchmake-extension"
+	notifications "github.com/PretendoNetwork/nex-protocols-go/v2/notifications"
+	notifications_types "github.com/PretendoNetwork/nex-protocols-go/v2/notifications/types"
 )
 
-func GetFriendNotificationData(err error, client *nex.Client, callID uint32, uiType int32) {
-	dataList := make([]*notifications_types.NotificationEvent, 0)
+func GetFriendNotificationData(err error, packet nex.PacketInterface, callID uint32, uiType *types.PrimitiveS32) (*nex.RMCMessage, *nex.Error) {
+	dataList := types.NewList[*notifications_types.NotificationEvent]()
 
-	caller, target, ringing := database.GetCallInfoByTarget(client.PID())
+	caller, target, ringing := database.GetCallInfoByTarget(packet.Sender().PID().Value())
 
 	// TODO: Multiple calls. Wii U Chat can handle it, but we don't support it yet
-	if caller != 0 && target == client.PID() && ringing {
+	if caller != 0 && target == packet.Sender().PID().Value() && ringing {
 		// Being called
 		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.RequestJoinGathering, notifications.NotificationSubTypes.RequestJoinGathering.None)
 
 		notification := notifications_types.NewNotificationEvent()
 
-		notification.PIDSource = caller
-		notification.Type = notificationType
-		notification.Param1 = caller
-		notification.Param2 = target
-		notification.StrParam = "Invite Request"
+		notification.PIDSource = types.NewPID(caller)
+		notification.Type.Value = notificationType
+		notification.Param1.Value = uint32(caller)
+		notification.Param2.Value = uint32(target)
+		notification.StrParam.Value = "Invite Request"
 
-		dataList = append(dataList, notification)
+		dataList.Append(notification)
 	}
 
-	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
-	rmcResponseStream.WriteListStructure(dataList)
+	connection := packet.Sender().(*nex.PRUDPConnection)
+	endpoint := connection.Endpoint().(*nex.PRUDPEndPoint)
+
+	rmcResponseStream := nex.NewByteStreamOut(endpoint.LibraryVersions(), endpoint.ByteStreamSettings())
+	dataList.WriteTo(rmcResponseStream)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
-	rmcResponse := nex.NewRMCResponse(matchmake_extension.ProtocolID, callID)
-	rmcResponse.SetSuccess(matchmake_extension.MethodGetFriendNotificationData, rmcResponseBody)
+	rmcResponse := nex.NewRMCSuccess(endpoint, rmcResponseBody)
+	rmcResponse.ProtocolID = matchmake_extension.ProtocolID
+	rmcResponse.MethodID = matchmake_extension.MethodGetFriendNotificationData
+	rmcResponse.CallID = callID
 
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }
