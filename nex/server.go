@@ -13,10 +13,14 @@ func StartNEXServer() {
 
 	globals.SecureEndpoint = nex.NewPRUDPEndPoint(1)
 	globals.SecureEndpoint.IsSecureEndPoint = true
-	globals.SecureEndpoint.SetAccessKey("e7a47214")
-	globals.SecureServer.LibraryVersions.SetDefault(nex.NewLibraryVersion(3, 4, 2))
+	globals.SecureEndpoint.AccountDetailsByPID = globals.AccountDetailsByPID
+	globals.SecureEndpoint.AccountDetailsByUsername = globals.AccountDetailsByUsername
+	globals.SecureEndpoint.ServerAccount = globals.SecureServerAccount
 	globals.SecureServer.BindPRUDPEndPoint(globals.SecureEndpoint)
 	// globals.SecureServer.SetPingTimeout(65535) // TODO: what to replace with
+
+	globals.SecureServer.LibraryVersions.SetDefault(nex.NewLibraryVersion(3, 4, 2))
+	globals.SecureEndpoint.SetAccessKey("e7a47214")
 
 	globals.SecureEndpoint.OnData(func(packet nex.PacketInterface) {
 		request := packet.RMCMessage()

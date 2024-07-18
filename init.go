@@ -24,9 +24,16 @@ func init() {
 		logger.Warning("Error loading .env file")
 	}
 
+	kerberosPassword := os.Getenv("PN_WIIU_CHAT_KERBEROS_PASSWORD")
 	friendsGRPCHost := os.Getenv("PN_WIIU_CHAT_FRIENDS_GRPC_HOST")
 	friendsGRPCPort := os.Getenv("PN_WIIU_CHAT_FRIENDS_GRPC_PORT")
 	friendsGRPCAPIKey := os.Getenv("PN_WIIU_CHAT_FRIENDS_GRPC_API_KEY")
+
+	if strings.TrimSpace(kerberosPassword) == "" {
+		globals.Logger.Warningf("PN_KERBEROS_PASSWORD environment variable not set. Using default password: %q", globals.KerberosPassword)
+	} else {
+		globals.KerberosPassword = kerberosPassword
+	}
 
 	if strings.TrimSpace(friendsGRPCHost) == "" {
 		globals.Logger.Error("PN_WIIU_CHAT_FRIENDS_GRPC_HOST environment variable not set")
@@ -61,5 +68,6 @@ func init() {
 		"X-API-Key", friendsGRPCAPIKey,
 	)
 
+	globals.InitAccounts()
 	database.ConnectAll()
 }

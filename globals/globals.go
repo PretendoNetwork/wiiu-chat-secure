@@ -9,6 +9,7 @@ import (
 )
 
 var Logger = plogger.NewLogger()
+var KerberosPassword = "password" // * Default password
 var SecureServer *nex.PRUDPServer
 var SecureEndpoint *nex.PRUDPEndPoint
 var GRPCFriendsClientConnection *grpc.ClientConn
