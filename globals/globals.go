@@ -1,6 +1,7 @@
 package globals
 
 import (
+	pb_account "github.com/PretendoNetwork/grpc-go/account"
 	pb "github.com/PretendoNetwork/grpc-go/friends"
 	"github.com/PretendoNetwork/nex-go/v2"
 	"github.com/PretendoNetwork/plogger-go"
@@ -12,6 +13,11 @@ var Logger = plogger.NewLogger()
 var KerberosPassword = "password" // * Default password
 var SecureServer *nex.PRUDPServer
 var SecureEndpoint *nex.PRUDPEndPoint
+
+var GRPCAccountClientConnection *grpc.ClientConn
+var GRPCAccountClient pb_account.AccountClient
+var GRPCAccountCommonMetadata metadata.MD
+
 var GRPCFriendsClientConnection *grpc.ClientConn
 var GRPCFriendsClient pb.FriendsClient
 var GRPCFriendsCommonMetadata metadata.MD

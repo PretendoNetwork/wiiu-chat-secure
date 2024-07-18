@@ -27,7 +27,7 @@ func connectMongo() {
 	mongoContext, _ = context.WithTimeout(context.Background(), 10*time.Second)
 	_ = mongoClient.Connect(mongoContext)
 
-	accountDatabase = mongoClient.Database("pretendo")
+	accountDatabase = mongoClient.Database("pretendo_account")
 	pnidCollection = accountDatabase.Collection("pnids")
 	nexAccountsCollection = accountDatabase.Collection("nexaccounts")
 
