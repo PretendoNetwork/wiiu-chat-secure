@@ -36,5 +36,5 @@ func StartNEXServer() {
 	registerCommonProtocols()
 	registerNEXProtocols()
 
-	globals.SecureServer.Listen(60005)
+	globals.NEXServer.Listen(":" + os.Getenv("PN_WIIU_CHAT_SECURE_SERVER_PORT"))
 }

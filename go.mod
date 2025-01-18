@@ -4,6 +4,8 @@ go 1.21
 
 toolchain go1.22.4
 
+replace github.com/PretendoNetwork/nex-protocols-common-go => ./nex-protocols-common-go
+
 require (
 	github.com/PretendoNetwork/grpc-go v1.0.1
 	github.com/PretendoNetwork/nex-go/v2 v2.0.5
