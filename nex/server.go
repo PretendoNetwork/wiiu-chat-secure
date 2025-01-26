@@ -2,6 +2,8 @@ package nex
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	nex "github.com/PretendoNetwork/nex-go/v2"
 	_ "github.com/PretendoNetwork/nex-protocols-go/v2"
@@ -36,5 +38,7 @@ func StartNEXServer() {
 	registerCommonProtocols()
 	registerNEXProtocols()
 
-	globals.NEXServer.Listen(":" + os.Getenv("PN_WIIU_CHAT_SECURE_SERVER_PORT"))
+	port, _ := strconv.Atoi(os.Getenv("PN_WIIU_CHAT_SECURE_SERVER_PORT"))
+
+	globals.SecureServer.Listen(port)
 }
