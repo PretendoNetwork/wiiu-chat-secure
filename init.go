@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	pb "github.com/PretendoNetwork/grpc-go/account"
+	pb_account "github.com/PretendoNetwork/grpc-go/account"
+	pb_friends "github.com/PretendoNetwork/grpc-go/friends"
 	"github.com/PretendoNetwork/nex-go/v2"
 	"github.com/PretendoNetwork/nex-go/v2/types"
 	"github.com/PretendoNetwork/plogger-go"
@@ -36,6 +37,9 @@ func init() {
 	accountGRPCHost := os.Getenv("PN_WUC_ACCOUNT_GRPC_HOST")
 	accountGRPCPort := os.Getenv("PN_WUC_ACCOUNT_GRPC_PORT")
 	accountGRPCAPIKey := os.Getenv("PN_WUC_ACCOUNT_GRPC_API_KEY")
+	friendsGRPCHost := os.Getenv("PN_WUC_FRIENDS_GRPC_HOST")
+	friendsGRPCPort := os.Getenv("PN_WUC_FRIENDS_GRPC_PORT")
+	friendsGRPCAPIKey := os.Getenv("PN_WUC_FRIENDS_GRPC_API_KEY")
 	postgresURI := os.Getenv("PN_WUC_POSTGRES_URI")
 
 	if strings.TrimSpace(postgresURI) == "" {
@@ -108,15 +112,48 @@ func init() {
 		globals.Logger.Warning("Insecure gRPC server detected. PN_WUC_ACCOUNT_GRPC_API_KEY environment variable not set")
 	}
 
+	if strings.TrimSpace(friendsGRPCHost) == "" {
+		globals.Logger.Error("PN_WUC_FRIENDS_GRPC_HOST environment variable not set")
+		os.Exit(0)
+	}
+
+	if strings.TrimSpace(friendsGRPCPort) == "" {
+		globals.Logger.Error("PN_WUC_FRIENDS_GRPC_PORT environment variable not set")
+		os.Exit(0)
+	}
+
+	if port, err := strconv.Atoi(friendsGRPCPort); err != nil {
+		globals.Logger.Errorf("PN_WUC_FRIENDS_GRPC_PORT is not a valid port. Expected 0-65535, got %s", friendsGRPCPort)
+		os.Exit(0)
+	} else if port < 0 || port > 65535 {
+		globals.Logger.Errorf("PN_WUC_FRIENDS_GRPC_PORT is not a valid port. Expected 0-65535, got %s", friendsGRPCPort)
+		os.Exit(0)
+	}
+
+	if strings.TrimSpace(friendsGRPCAPIKey) == "" {
+		globals.Logger.Warning("Insecure gRPC server detected. PN_WUC_FRIENDS_GRPC_API_KEY environment variable not set")
+	}
+
 	globals.GRPCAccountClientConnection, err = grpc.Dial(fmt.Sprintf("%s:%s", accountGRPCHost, accountGRPCPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		globals.Logger.Criticalf("Failed to connect to account gRPC server: %v", err)
 		os.Exit(0)
 	}
 
-	globals.GRPCAccountClient = pb.NewAccountClient(globals.GRPCAccountClientConnection)
+	globals.GRPCAccountClient = pb_account.NewAccountClient(globals.GRPCAccountClientConnection)
 	globals.GRPCAccountCommonMetadata = metadata.Pairs(
 		"X-API-Key", accountGRPCAPIKey,
+	)
+
+	globals.GRPCFriendsClientConnection, err = grpc.Dial(fmt.Sprintf("%s:%s", friendsGRPCHost, friendsGRPCPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		globals.Logger.Criticalf("Failed to connect to account gRPC server: %v", err)
+		os.Exit(0)
+	}
+
+	globals.GRPCFriendsClient = pb_friends.NewFriendsClient(globals.GRPCFriendsClientConnection)
+	globals.GRPCFriendsCommonMetadata = metadata.Pairs(
+		"X-API-Key", friendsGRPCAPIKey,
 	)
 
 	database.ConnectPostgres()
