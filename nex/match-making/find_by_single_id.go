@@ -1,16 +1,18 @@
 package nex_match_making
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
-	match_making "github.com/PretendoNetwork/nex-protocols-go/match-making"
-	match_making_types "github.com/PretendoNetwork/nex-protocols-go/match-making/types"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	match_making "github.com/PretendoNetwork/nex-protocols-go/v2/match-making"
+	match_making_types "github.com/PretendoNetwork/nex-protocols-go/v2/match-making/types"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 )
 
-func FindBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
-	caller := id // Gathering ID and caller are the same here
+func FindBySingleID(err error, packet nex.PacketInterface, callID uint32, id types.UInt32) (*nex.RMCMessage, *nex.Error) {
+	caller := types.NewPID(uint64(id)) // Gathering ID and caller are the same here
 
-	result := true
+	result := types.NewBool(true)
 
 	gathering := match_making_types.NewGathering()
 	gathering.ID = id
@@ -20,29 +22,26 @@ func FindBySingleID(err error, client *nex.Client, callID uint32, id uint32) {
 	gathering.MaximumParticipants = 2
 	gathering.Description = "Doors Invite Request"
 
-	dataHolder := nex.NewDataHolder()
-	dataHolder.SetTypeName("Gathering")
-	dataHolder.SetObjectData(gathering)
+	// Gathering does not support being within an AnyDataHolder for some reason,
+	// so we have to create the AnyDataHolder info manually
+	dataHolder := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	gathering.WriteTo(dataHolder)
+	dataHolderBytes := dataHolder.Bytes()
 
-	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
-	rmcResponseStream.WriteBool(result)
-	rmcResponseStream.WriteDataHolder(dataHolder)
+	name := types.NewString("Gathering")
+	holderLen := types.NewUInt32(uint32(len(dataHolderBytes)) + 4)
+	holderBuf := types.NewBuffer(dataHolderBytes)
 
-	rmcResponse := nex.NewRMCResponse(match_making.ProtocolID, callID)
-	rmcResponse.SetSuccess(match_making.MethodFindBySingleID, rmcResponseStream.Bytes())
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	result.WriteTo(rmcResponseStream)
+	name.WriteTo(rmcResponseStream)
+	holderLen.WriteTo(rmcResponseStream)
+	holderBuf.WriteTo(rmcResponseStream)
 
-	rmcResponseBytes := rmcResponse.Bytes()
+	rmcResponse := nex.NewRMCSuccess(globals.SecureEndpoint, rmcResponseStream.Bytes())
+	rmcResponse.ProtocolID = match_making.ProtocolID
+	rmcResponse.CallID = callID
+	rmcResponse.MethodID = match_making.MethodFindBySingleID
 
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }

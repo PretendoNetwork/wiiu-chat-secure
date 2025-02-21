@@ -1,40 +1,24 @@
 package nex_match_making
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
-	match_making "github.com/PretendoNetwork/nex-protocols-go/match-making"
-	"github.com/PretendoNetwork/wiiu-chat-secure/database"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	match_making "github.com/PretendoNetwork/nex-protocols-go/v2/match-making"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 )
 
-func GetSessionUrls(err error, client *nex.Client, callID uint32, gid uint32) {
-	var stationUrlStrings []string
+func GetSessionUrls(err error, packet nex.PacketInterface, callID uint32, gid types.UInt32) (*nex.RMCMessage, *nex.Error) {
+	caller := types.NewPID(uint64(gid)) // Gathering ID and caller are the same here
 
-	hostpid, _, _ := database.GetCallInfoByCaller(gid)
+	stationUrlStrings := globals.SecureEndpoint.FindConnectionByPID(uint64(caller)).StationURLs
 
-	stationUrlStrings = globals.NEXServer.FindClientFromPID(hostpid).StationURLs()
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	stationUrlStrings.WriteTo(rmcResponseStream)
 
-	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
-	rmcResponseStream.WriteListString(stationUrlStrings)
+	rmcResponse := nex.NewRMCSuccess(globals.SecureEndpoint, rmcResponseStream.Bytes())
+	rmcResponse.ProtocolID = match_making.ProtocolID
+	rmcResponse.CallID = callID
+	rmcResponse.MethodID = match_making.MethodGetSessionURLs
 
-	rmcResponseBody := rmcResponseStream.Bytes()
-
-	// Build response packet
-	rmcResponse := nex.NewRMCResponse(match_making.ProtocolID, callID)
-	rmcResponse.SetSuccess(match_making.MethodGetSessionURLs, rmcResponseBody)
-
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }

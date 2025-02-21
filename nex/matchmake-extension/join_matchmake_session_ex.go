@@ -1,35 +1,29 @@
 package nex_matchmake_extension
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
-	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
-	"github.com/PretendoNetwork/wiiu-chat-secure/database"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/v2/matchmake-extension"
+	"github.com/PretendoNetwork/wiiu-chat/database"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 )
 
-func JoinMatchmakeSessionEx(err error, client *nex.Client, callID uint32, gid uint32, strMessage string, dontCareMyBlockList bool, participationCount uint16) {
+func JoinMatchmakeSessionEx(err error, packet nex.PacketInterface, callID uint32, gid types.UInt32, strMessage types.String, dontCareMyBlockList types.Bool, participationCount types.UInt16) (*nex.RMCMessage, *nex.Error) {
 	globals.Logger.Infof("gid: %d, strMessage: %s, dontCareMyBlockList: %t, participationCount: %d\r\n", gid, strMessage, dontCareMyBlockList, participationCount)
 
-	database.EndCallRinging(gid)
+	caller := types.NewPID(uint64(gid)) // Gathering ID and caller are the same here
 
-	output := nex.NewStreamOut(globals.NEXServer)
-	output.WriteBuffer(make([]byte, 32))
+	database.EndCallRinging(caller)
 
-	rmcResponse := nex.NewRMCResponse(matchmake_extension.ProtocolID, callID)
-	rmcResponse.SetSuccess(matchmake_extension.MethodJoinMatchmakeSessionEx, output.Bytes())
+	sessionKey := types.NewBuffer(make([]byte, 32))
 
-	rmcResponseBytes := rmcResponse.Bytes()
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	sessionKey.WriteTo(rmcResponseStream)
 
-	responsePacket, _ := nex.NewPacketV1(client, nil)
+	rmcResponse := nex.NewRMCSuccess(globals.SecureEndpoint, rmcResponseStream.Bytes())
+	rmcResponse.ProtocolID = matchmake_extension.ProtocolID
+	rmcResponse.CallID = callID
+	rmcResponse.MethodID = matchmake_extension.MethodJoinMatchmakeSessionEx
 
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }

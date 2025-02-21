@@ -1,64 +1,53 @@
 package nex_matchmake_extension
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/wiiu-chat-secure/database"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
-	"github.com/PretendoNetwork/wiiu-chat-secure/grpc"
-	nex_notifications "github.com/PretendoNetwork/wiiu-chat-secure/nex/notifications"
+	"github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	"github.com/PretendoNetwork/wiiu-chat/database"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
+	"github.com/PretendoNetwork/wiiu-chat/grpc"
+	nex_notifications "github.com/PretendoNetwork/wiiu-chat/nex/notifications"
 
-	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
-	"github.com/PretendoNetwork/nex-protocols-go/notifications"
+	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/v2/matchmake-extension"
+	notifications "github.com/PretendoNetwork/nex-protocols-go/v2/notifications"
 )
 
-func UpdateNotificationData(err error, client *nex.Client, callID uint32, uiType uint32, uiParam1 uint32, uiParam2 uint32, strParam string) {
+func UpdateNotificationData(err error, packet nex.PacketInterface, callID uint32, uiType types.UInt32, uiParam1 types.UInt32, uiParam2 types.UInt32, strParam types.String) (*nex.RMCMessage, *nex.Error) {
 	globals.Logger.Infof("uiType: %d, uiParam1: %d, uiParam2: %d, strParam: %s\r\n", uiType, uiParam1, uiParam2, strParam)
-	recipientClient := globals.NEXServer.FindClientFromPID(uiParam2)
+	recipientClient := globals.SecureEndpoint.FindConnectionByPID(uint64(uiParam2))
 
-	if uiType == notifications.NotificationCategories.RequestJoinGathering {
+	if uiType.Equals(types.NewUInt32(notifications.NotificationCategories.RequestJoinGathering)) {
 		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.RequestJoinGathering, notifications.NotificationSubTypes.RequestJoinGathering.None)
-		database.NewCall(client.PID(), uiParam2)
+		target := types.NewPID(uint64(uiParam2))
+		database.NewCall(packet.Sender().PID(), target)
 
 		// If they don't have a session with the app, tell Friends to alert them on the HOME menu.
-		if recipientClient != nil && recipientClient.StationURLs() != nil {
-			nex_notifications.ProcessNotificationEvent(callID, client.PID(), notificationType, uiParam1, uiParam2, strParam)
+		if recipientClient != nil && recipientClient.StationURLs != nil {
+			nex_notifications.ProcessNotificationEvent(callID, packet, types.NewUInt32(notificationType), uiParam1, uiParam2, strParam)
 		} else {
-			grpc.SendFriendsNotification(client.PID(), uiParam2, true)
+			grpc.SendFriendsNotification(packet.Sender().PID(), types.NewPID(uint64(uiParam2)), true)
 		}
 	}
 
-	if uiType == notifications.NotificationCategories.EndGathering {
+	if uiType.Equals(types.NewUInt32(notifications.NotificationCategories.EndGathering)) {
 		notificationType := notifications.BuildNotificationType(notifications.NotificationCategories.EndGathering, notifications.NotificationSubTypes.EndGathering.None)
-		database.EndCall(uiParam1)
+		caller := types.NewPID(uint64(uiParam1))
+
+		database.EndCall(caller)
 
 		// Alert the other side we aren't calling anymore.
 
-		if recipientClient != nil && recipientClient.StationURLs() != nil {
-			nex_notifications.ProcessNotificationEvent(callID, client.PID(), notificationType, uiParam1, uiParam2, strParam)
+		if recipientClient != nil && recipientClient.StationURLs != nil {
+			nex_notifications.ProcessNotificationEvent(callID, packet, types.NewUInt32(notificationType), uiParam1, uiParam2, strParam)
 		} else {
-			grpc.SendFriendsNotification(client.PID(), uiParam2, false)
+			grpc.SendFriendsNotification(packet.Sender().PID(), types.NewPID(uint64(uiParam2)), false)
 		}
-
-		// The user must be kicked, otherwise the app hangs forever.
-		globals.NEXServer.TimeoutKick(client)
 	}
 
-	// Build response packet
-	rmcResponse := nex.NewRMCResponse(matchmake_extension.ProtocolID, callID)
-	rmcResponse.SetSuccess(matchmake_extension.MethodUpdateNotificationData, nil)
+	rmcResponse := nex.NewRMCSuccess(globals.SecureEndpoint, nil)
+	rmcResponse.ProtocolID = matchmake_extension.ProtocolID
+	rmcResponse.CallID = callID
+	rmcResponse.MethodID = matchmake_extension.MethodUpdateNotificationData
 
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }

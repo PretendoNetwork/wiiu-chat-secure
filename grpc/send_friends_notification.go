@@ -2,18 +2,17 @@ package grpc
 
 import (
 	"context"
-	"encoding/binary"
 
 	pb "github.com/PretendoNetwork/grpc-go/friends"
-	nex "github.com/PretendoNetwork/nex-go"
-	friends_wiiu_types "github.com/PretendoNetwork/nex-protocols-go/friends-wiiu/types"
-	nintendo_notifications "github.com/PretendoNetwork/nex-protocols-go/nintendo-notifications"
-	nintendo_notifications_types "github.com/PretendoNetwork/nex-protocols-go/nintendo-notifications/types"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	friends_wiiu_types "github.com/PretendoNetwork/nex-protocols-go/v2/friends-wiiu/types"
+	nintendo_notifications_types "github.com/PretendoNetwork/nex-protocols-go/v2/nintendo-notifications/types"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 	"google.golang.org/grpc/metadata"
 )
 
-func SendFriendsNotification(caller uint32, target uint32, ringing bool) {
+func SendFriendsNotification(caller types.PID, target types.PID, ringing types.Bool) {
 	ctx := metadata.NewOutgoingContext(context.Background(), globals.GRPCFriendsCommonMetadata)
 
 	presence := friends_wiiu_types.NewNintendoPresenceV2()
@@ -22,31 +21,30 @@ func SendFriendsNotification(caller uint32, target uint32, ringing bool) {
 	presence.GameKey = friends_wiiu_types.NewGameKey()
 	presence.GameServerID = 0x1005A000
 	presence.PID = 1 // This is not a PID, but the amount of times the PID is repeated in bytes in the application data.
-	presence.GatheringID = caller
+	presence.GatheringID = types.NewUInt32(uint32(caller))
 
 	if ringing {
-		presence.Unknown2 = 0x65
+		presence.Unknown2 = types.NewUInt32(0x65)
 	}
 
-	targetBytes := make([]byte, 4)
-	binary.BigEndian.PutUint32(targetBytes, target)
+	targetBytes := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	target.WriteTo(targetBytes)
 
-	presence.ApplicationData = targetBytes
+	presence.ApplicationData = targetBytes.Bytes()
 
 	presence.GameKey.TitleID = 0x000500101005A100
 	presence.GameKey.TitleVersion = 55
 
 	eventObject := nintendo_notifications_types.NewNintendoNotificationEvent()
-	eventObject.Type = nintendo_notifications.NotificationTypes.FriendStartedTitle
 	eventObject.SenderPID = caller
-	eventObject.DataHolder = nex.NewDataHolder()
-	eventObject.DataHolder.SetTypeName("NintendoPresenceV2")
-	eventObject.DataHolder.SetObjectData(presence)
+	eventObject.DataHolder = types.NewDataHolder()
+	eventObject.DataHolder.Object = presence
 
-	stream := nex.NewStreamOut(globals.NEXServer)
-	eventObjectBytes := eventObject.Bytes(stream)
+	stream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	eventObject.WriteTo(stream)
+	eventObjectBytes := stream.Bytes()
 
-	_, err := globals.GRPCFriendsClient.SendUserNotificationWiiU(ctx, &pb.SendUserNotificationWiiURequest{Pid: target, NotificationData: eventObjectBytes})
+	_, err := globals.GRPCFriendsClient.SendUserNotificationWiiU(ctx, &pb.SendUserNotificationWiiURequest{Pid: uint32(target), NotificationData: eventObjectBytes})
 	if err != nil {
 		globals.Logger.Criticalf("Greeting Friends gRPC failed! : %v", err)
 	}

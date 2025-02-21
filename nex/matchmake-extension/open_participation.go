@@ -1,31 +1,20 @@
 package nex_matchmake_extension
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 
-	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
+	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/v2/matchmake-extension"
 )
 
-func OpenParticipation(err error, client *nex.Client, callID uint32, gid uint32) {
+func OpenParticipation(err error, packet nex.PacketInterface, callID uint32, gid types.UInt32) (*nex.RMCMessage, *nex.Error) {
 	// TODO: Implement this
 
-	// Build response packet
-	rmcResponse := nex.NewRMCResponse(matchmake_extension.ProtocolID, callID)
-	rmcResponse.SetSuccess(matchmake_extension.MethodOpenParticipation, nil)
+	rmcResponse := nex.NewRMCSuccess(globals.SecureEndpoint, nil)
+	rmcResponse.ProtocolID = matchmake_extension.ProtocolID
+	rmcResponse.CallID = callID
+	rmcResponse.MethodID = matchmake_extension.MethodOpenParticipation
 
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }
