@@ -20,6 +20,7 @@ func StartSecureServer() {
 	globals.SecureServer.BindPRUDPEndPoint(globals.SecureEndpoint)
 	globals.SecureServer.ByteStreamSettings.UseStructureHeader = false
 
+	// Technically this title is 3.4.2; however, it uses older-style structures and is therefore defined here as 3.3.2
 	globals.SecureServer.LibraryVersions.SetDefault(nex.NewLibraryVersion(3, 3, 2))
 	globals.SecureServer.AccessKey = "e7a47214"
 

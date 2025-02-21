@@ -23,6 +23,7 @@ func StartAuthenticationServer() {
 	globals.AuthenticationServer.BindPRUDPEndPoint(globals.AuthenticationEndpoint)
 	globals.AuthenticationServer.ByteStreamSettings.UseStructureHeader = false
 
+	// Technically this title is 3.4.2; however, it uses older-style structures and is therefore defined here as 3.3.2
 	globals.AuthenticationServer.LibraryVersions.SetDefault(nex.NewLibraryVersion(3, 3, 2))
 	globals.AuthenticationServer.AccessKey = "e7a47214"
 
