@@ -28,3 +28,6 @@ build
 log
 *.pem
 *.key
+
+# macOS nonsense
+.DS_Store
