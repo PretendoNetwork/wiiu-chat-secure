@@ -1,20 +1,14 @@
 package database
 
 import (
-	"context"
-
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 )
 
-func NewCall(caller uint32, target uint32) {
-	document := bson.D{
-		{"caller_pid", caller},
-		{"target_pid", target},
-		{"ringing", true},
-	}
-
-	_, err := callsCollection.InsertOne(context.TODO(), document)
+func NewCall(caller types.PID, target types.PID) {
+	_, err := Postgres.Exec(`INSERT INTO ongoingcalls (caller_pid, target_pid, ringing) VALUES ($1, $2, $3);`, caller, target, true)
 	if err != nil {
-		panic(err)
+		globals.Logger.Critical(err.Error())
+		return
 	}
 }
