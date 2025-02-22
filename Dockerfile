@@ -4,7 +4,7 @@ ARG app_dir="/home/go/app"
 
 
 # * Building the application
-FROM golang:1.22-alpine3.20 AS build
+FROM golang:1.23-alpine3.20 AS build
 ARG app_dir
 
 WORKDIR ${app_dir}
@@ -15,8 +15,9 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 	go mod download -x
 
 COPY . .
+ARG BUILD_STRING=pretendo.WUC.docker
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-	CGO_ENABLED=0 go build -v -o ${app_dir}/build/server
+	CGO_ENABLED=0 go build -ldflags "-X 'main.serverBuildString=${BUILD_STRING}'" -v -o ${app_dir}/build/server
 
 
 # * Running the final application

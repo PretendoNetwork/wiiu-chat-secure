@@ -1,30 +1,27 @@
 package nex_match_making
 
 import (
-	nex "github.com/PretendoNetwork/nex-go"
-	match_making "github.com/PretendoNetwork/nex-protocols-go/match-making"
-	"github.com/PretendoNetwork/wiiu-chat-secure/database"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	match_making "github.com/PretendoNetwork/nex-protocols-go/v2/match-making"
+	"github.com/PretendoNetwork/wiiu-chat/database"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 )
 
-func UnregisterGathering(err error, client *nex.Client, callID uint32, idGathering uint32) {
-	database.EndCall(idGathering)
+func UnregisterGathering(err error, packet nex.PacketInterface, callID uint32, idGathering types.UInt32) (*nex.RMCMessage, *nex.Error) {
+	caller := types.NewPID(uint64(idGathering)) // Gathering ID and caller are the same here
 
-	rmcResponse := nex.NewRMCResponse(match_making.MethodUnregisterGathering, callID)
-	rmcResponse.SetSuccess(match_making.ProtocolID, []byte{0x01})
+	database.EndCall(caller)
 
-	rmcResponseBytes := rmcResponse.Bytes()
+	success := types.NewBool(true)
 
-	responsePacket, _ := nex.NewPacketV1(client, nil)
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	success.WriteTo(rmcResponseStream)
 
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
+	rmcResponse := nex.NewRMCSuccess(globals.SecureEndpoint, rmcResponseStream.Bytes())
+	rmcResponse.ProtocolID = match_making.ProtocolID
+	rmcResponse.CallID = callID
+	rmcResponse.MethodID = match_making.MethodUnregisterGathering
 
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }

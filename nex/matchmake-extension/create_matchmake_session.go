@@ -3,39 +3,27 @@ package nex_matchmake_extension
 import (
 	//"math/rand"
 
-	nex "github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/wiiu-chat-secure/globals"
+	nex "github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 
-	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/matchmake-extension"
+	match_making_types "github.com/PretendoNetwork/nex-protocols-go/v2/match-making/types"
+	matchmake_extension "github.com/PretendoNetwork/nex-protocols-go/v2/matchmake-extension"
 )
 
-func CreateMatchmakeSession(err error, client *nex.Client, callID uint32, anyGathering *nex.DataHolder, message string, participationCount uint16) {
-	var gid uint32 = client.PID() // TODO: Random this
+func CreateMatchmakeSession(err error, packet nex.PacketInterface, callID uint32, anyGathering match_making_types.GatheringHolder, message types.String, participationCount types.UInt16) (*nex.RMCMessage, *nex.Error) {
+	var gid types.UInt32 = types.NewUInt32(uint32(packet.Sender().PID())) // TODO: Randomize this
 	sessionKey := make([]byte, 32)
-	//rand.Read(sessionKey)
+	sessionKeyBuffer := types.NewBuffer(sessionKey)
 
-	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
+	gid.WriteTo(rmcResponseStream)
+	sessionKeyBuffer.WriteTo(rmcResponseStream)
 
-	rmcResponseStream.WriteUInt32LE(gid)
-	rmcResponseStream.WriteBuffer(sessionKey)
+	rmcResponse := nex.NewRMCSuccess(globals.SecureEndpoint, rmcResponseStream.Bytes())
+	rmcResponse.ProtocolID = matchmake_extension.ProtocolID
+	rmcResponse.CallID = callID
+	rmcResponse.MethodID = matchmake_extension.MethodCreateMatchmakeSession
 
-	rmcResponseBody := rmcResponseStream.Bytes()
-
-	rmcResponse := nex.NewRMCResponse(matchmake_extension.ProtocolID, callID)
-	rmcResponse.SetSuccess(matchmake_extension.MethodCreateMatchmakeSession, rmcResponseBody)
-
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.NEXServer.Send(responsePacket)
+	return rmcResponse, nil
 }

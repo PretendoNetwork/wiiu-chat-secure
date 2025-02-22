@@ -1,18 +1,14 @@
 package database
 
 import (
-	"context"
-
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 )
 
-func EndCall(caller uint32) {
-	filter := bson.D{
-		{"caller_pid", caller},
-	}
-
-	_, err := callsCollection.DeleteOne(context.TODO(), filter)
+func EndCall(caller types.PID) {
+	_, err := Postgres.Exec(`DELETE FROM ongoingcalls WHERE caller_pid = $1;`, caller)
 	if err != nil {
-		panic(err)
+		globals.Logger.Critical(err.Error())
+		return
 	}
 }

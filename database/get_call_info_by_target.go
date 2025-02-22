@@ -1,27 +1,16 @@
 package database
 
 import (
-	"context"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	"github.com/PretendoNetwork/wiiu-chat/globals"
 )
 
-func GetCallInfoByTarget(target uint32) (uint32, uint32, bool) { // caller pid, target pid, ringing
-	var result bson.M
-	filter := bson.D{
-		{"target_pid", target},
-	}
-
-	err := callsCollection.FindOne(context.TODO(), filter, options.FindOne()).Decode(&result)
+func GetCallInfoByTarget(target types.PID) (caller_pid types.PID, target_pid types.PID, ringing types.Bool) {
+	row := Postgres.QueryRow(`SELECT (caller_pid, target_pid, ringing) FROM ongoingcalls WHERE target_pid = $1;`, target)
+	err := row.Scan(&caller_pid, &target_pid, &ringing)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return 0, 0, false
-		} else {
-			panic(err)
-		}
-	} else {
-		return uint32(result["caller_pid"].(int64)), uint32(result["target_pid"].(int64)), result["ringing"].(bool)
+		globals.Logger.Warning(err.Error())
+		return 0, 0, false
 	}
+	return caller_pid, target_pid, ringing
 }
