@@ -6,7 +6,7 @@ import (
 )
 
 func EndCallRinging(caller types.PID) {
-	_, err := Postgres.Exec(`UPDATE ongoingcalls SET (ringing = $1) WHERE caller_pid = $2;`, false, caller)
+	_, err := Postgres.Exec(`UPDATE ongoingcalls SET ringing = $1 WHERE caller_pid = $2;`, false, caller)
 	if err != nil {
 		globals.Logger.Critical(err.Error())
 		return
